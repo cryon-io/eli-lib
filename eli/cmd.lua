@@ -1,4 +1,5 @@
 local io = require"io"
+local generate_safe_functions = require"eli.util".generate_safe_functions
 
 local function execute(cmd) 
    f = io:popen(cmd)
@@ -7,6 +8,6 @@ local function execute(cmd)
    return exit, signal, output 
 end
 
-return {
+return generate_safe_functions({
    execute = execute
-}
+})

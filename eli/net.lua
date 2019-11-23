@@ -1,7 +1,8 @@
 local curl = require"cURL" -- "lcurl.safe"
 local io = require"io"
+local generate_safe_functions = require"eli.util".generate_safe_functions
 
-local function downloadfile(url, destination, options)
+local function download_file(url, destination, options)
    if type(options) == 'table' then
       followRedirects = options.follow_redirects
       verifyPeer = options.verify_peer
@@ -26,6 +27,6 @@ local function downloadfile(url, destination, options)
    f:close()
 end
 
-return {
-   downloadfile = downloadfile
-}
+return generate_safe_functions({
+   download_file = download_file
+})

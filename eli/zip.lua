@@ -3,6 +3,7 @@ local zip = require"lzip"
 local path = require"eli.path"
 local mkdirp = require"eli.fs".mkdirp
 local separator = require"eli.path".default_sep()
+local generate_safe_functions = require"eli.util".generate_safe_functions
 
 local function extract(source, destination, ignoreRootLevelDir)
    assert(lfs.attributes(destination, "mode") == "directory", "Destination not found or is not a directory: " .. destination)
@@ -61,7 +62,7 @@ local function extract(source, destination, ignoreRootLevelDir)
    zip_arch:close()
 end
 
-return {
+return generate_safe_functions({
    extract = extract
-}
+})
 

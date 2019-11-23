@@ -1,10 +1,10 @@
-local function keys(t) 
+local function keys(t)
    local keys = {}
-   for k, _ in pairs(t) do 
+   for k, _ in pairs(t) do
       table.insert(keys, k)
    end
    return keys
-end 
+end
 
 local function values(t)
    local vals = {}
@@ -17,13 +17,24 @@ end
 local function toArray(t)
    local arr = {}
    for k, v in pairs(t) do
-      table.insert(arr, { key = k, value = v })
+      table.insert(arr, {key = k, value = v})
    end
    return arr
+end
+
+local function generate_safe_functions(functions)
+   for k, v in pairs(functions) do
+      if type(v) == "function" then
+         functions["safe_" .. k] = function(...)
+            pcall(v, ...)
+         end
+      end
+   end
 end
 
 return {
    keys = keys,
    values = values,
-   toArray = toArray
+   toArray = toArray,
+   generate_safe_functions = generate_safe_functions
 }
