@@ -24,12 +24,13 @@ end
 
 local function generate_safe_functions(functions)
    for k, v in pairs(functions) do
-      if type(v) == "function" then
+      if type(v) == "function" and not k:match("^safe_") then
          functions["safe_" .. k] = function(...)
-            pcall(v, ...)
+            return pcall(v, ...)
          end
       end
    end
+   return functions
 end
 
 return {

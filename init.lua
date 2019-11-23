@@ -35,9 +35,10 @@ local function eli_init()
    if i_min == -1 then -- we are running without script (interactive mode)
       appRoot = nil 
    else 
-      appRootScript = path.abs(arg[0], require"lfs".currentdir())
-      appRoot = path.dir(appRootScript)
+      APP_ROOT_SCRIPT = path.abs(arg[0], require"lfs".currentdir())
+      APP_ROOT = path.dir(appRootScript)
    end
+   ELI_LIB_VERSION = '0.1.2'
 end 
 
 eli_init()
