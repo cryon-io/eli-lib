@@ -1,45 +1,61 @@
-local function eli_init() 
-   local path = require"eli.path"
-   local lfs = require"lfs"
+local function eli_init()
+   local path = require "eli.path"
+   local lfsLoaded, lfs = pcall(require, "lfs")
    local i_min = 0
-   while arg[ i_min ] do i_min = i_min - 1 end
+   while arg[i_min] do
+      i_min = i_min - 1
+   end
 
-   interpreter = arg[i_min + 1]
-   if not interpreter:match(path.default_sep()) then 
-      if path.default_sep() == '/' then
-         local io = require"io"
+   local function try_identify_interpreter(interpreter)
+      if path.default_sep() == "/" then
+         local io = require "io"
          local f = io.popen("which " .. interpreter)
          local path = f:read("a*")
-         if path ~= nil then 
+         if path ~= nil then
             path = path:gsub("%s*", "")
          end
          exit = f:close()
-         if exit == 0 then 
-            interpreter = path
+         if exit == 0 then
+            return path
          end
-      else 
-         path = requore"os".getenv"PATH"
+      else
+         path = requore "os".getenv "PATH"
          if path then
-            for subpath in path:gmatch('([^;]+)') do
-               if path.file(subpath) == interpreter then 
-                  interpreter = subpath
-                  break
+            for subpath in path:gmatch("([^;]+)") do
+               if path.file(subpath) == interpreter then
+                  return subpath
                end
             end
          end
       end
+   end
+
+   interpreter = arg[i_min + 1]
+   if not interpreter:match(path.default_sep()) then
+      local identified, _interpreter = pcall(try_identify_interpreter, interpreter)
+      if identified then
+         interpreter = _interpreter
+      end
    elseif not path.isabs(interpreter) then
-      interpreter = path.abs(interpreter, require"lfs".currentdir())
+      if lfsLoaded then
+         interpreter = path.abs(interpreter, lfs.currentdir())
+      else
+         interpreter = inter
+      end
    end
 
    if i_min == -1 then -- we are running without script (interactive mode)
-      appRoot = nil 
-   else 
-      APP_ROOT_SCRIPT = path.abs(arg[0], require"lfs".currentdir())
+      appRoot = nil
+   else
+      if lfsLoaded then
+         APP_ROOT_SCRIPT = path.abs(arg[0], lfs.currentdir())
+      else
+         APP_ROOT_SCRIPT = arg[0]
+      end
       APP_ROOT = path.dir(appRootScript)
    end
-   ELI_LIB_VERSION = '0.1.2'
-end 
+   ELI_LIB_VERSION = "0.1.3"
+end
 
 eli_init()
 -- cleanup init
