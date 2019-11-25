@@ -2,9 +2,13 @@ local curlLoaded, curl = pcall(require, "cURL") -- "lcurl.safe"
 local io = require "io"
 local generate_safe_functions = require "eli.util".generate_safe_functions
 
+local function net_available()
+   return curlLoaded
+end
+
 local function download_file(url, destination, options)
    if not curlLoaded then
-      error("Networking not available...")
+      error("Networking not available!")
    end
 
    if type(options) == "table" then
@@ -34,6 +38,7 @@ end
 
 return generate_safe_functions(
    {
-      download_file = download_file
+      download_file = download_file,
+      net_available = net_available
    }
 )

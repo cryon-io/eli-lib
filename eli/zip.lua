@@ -1,19 +1,30 @@
 local lfsLoaded, lfs = pcall(require, "lfs")
 local zip = require "lzip"
 local path = require "eli.path"
-local mkdirp = require "eli.fs".mkdirp
 local separator = require "eli.path".default_sep()
 local generate_safe_functions = require "eli.util".generate_safe_functions
 
-local function extract(source, destination, ignoreRootLevelDir)
-   if not lfsLoaded then
-      error("LFS not available! Cannot exctract.")
+local function extract(source, destination, options)
+   if lfsLoaded then
+      assert(
+         lfs.attributes(destination, "mode") == "directory",
+         "Destination not found or is not a directory: " .. destination
+      )
    end
 
-   assert(
-      lfs.attributes(destination, "mode") == "directory",
-      "Destination not found or is not a directory: " .. destination
-   )
+   local mkdirp = lfsLoaded and require "eli.fs".mkdirp
+
+   local ignoreRootLevelDir = false
+   local transform_path = nil
+   if type(options) == "table" then
+      ignoreRootLevelDir = options.ignoreRootLevelDir
+      transform_path = options.transform_path
+      if type(options.mkdirp) == "function" then
+         mkdirp = options.mkdirp
+      end
+   elseif type(options) == "boolean" then
+      ignoreRootLevelDir = options
+   end
 
    local zip_arch, err = zip.open(source, zip.CHECKCONS)
    assert(zip_arch ~= nil, err)
@@ -35,16 +46,24 @@ local function extract(source, destination, ignoreRootLevelDir)
 
    for i = 1, #zip_arch do
       local stat = zip_arch:stat(i)
-      local targetPath = path.combine(destination, stat.name:sub(il))
+
+      local targetPath = path.filename(stat.name) -- by default we assume that mkdir is nor supported and we cannot create directories
+
+      if type(transform_path) == "function" then -- if supplied transform with transform functions
+         targetPath = transform_path(stat.name)
+      elseif mkdirp then --mkdir supported we can use path as is :)
+         targetPath = path.combine(destination, stat.name:sub(il))
+      end
+
       if stat.name:sub(-(#"/")) == "/" then
          -- directory
-         if lfs.attributes(targetPath) == nil then
+         if type(mkdirp) == "function" and lfs.attributes(targetPath) == nil then
             mkdirp(targetPath)
          end
       else
          local comprimedFile = zip_arch:open(i)
          local dir = path.dir(targetPath)
-         if lfs.attributes(dir) == nil then
+         if type(mkdirp) == "function" and lfs.attributes(dir) == nil then
             mkdirp(dir)
          end
          local b = 0

@@ -12,7 +12,10 @@ function Logger:new(options)
         options = {}
     end
     if options.format == nil then
-        options.format = 'standard'
+        options.format = 'auto'
+    end
+    if options.format == 'auto' then
+        options.format = is_tty and 'standard' or 'json'
     end
     if options.colorful == nil then 
         options.colorful = is_tty

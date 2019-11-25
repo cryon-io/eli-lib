@@ -92,6 +92,10 @@ local function mkdir(...)
    lfs.mkdir(...)
 end
 
+local function lfs_available()
+   return lfsLoaded
+end
+
 return generate_safe_functions(
    {
       write_file = write_file,
@@ -100,6 +104,7 @@ return generate_safe_functions(
       mkdir = mkdir,
       mkdirp = mkdirp,
       delete = delete,
-      exists = exists
+      exists = exists,
+      lfs_available = lfs_available
    }
 )
