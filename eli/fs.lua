@@ -105,6 +105,7 @@ return generate_safe_functions(
       mkdirp = mkdirp,
       delete = delete,
       exists = exists,
+      move = move,
       lfs_available = lfs_available
    }
 )

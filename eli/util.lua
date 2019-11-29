@@ -22,6 +22,20 @@ local function toArray(t)
    return arr
 end
 
+local function is_array(t)
+   if type(t) ~= "table" then
+      return false
+   end
+   local i = 0
+   for k in pairs(t) do
+      i = i + 1
+      if i ~= k then
+         return false
+      end
+   end
+   return true
+end
+
 local function generate_safe_functions(functions)
    for k, v in pairs(functions) do
       if type(v) == "function" and not k:match("^safe_") then

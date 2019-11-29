@@ -45,16 +45,16 @@ local function eli_init()
    end
 
    if i_min == -1 then -- we are running without script (interactive mode)
-      appRoot = nil
+      APP_ROOT = nil
    else
       if lfsLoaded then
          APP_ROOT_SCRIPT = path.abs(arg[0], lfs.currentdir())
       else
          APP_ROOT_SCRIPT = arg[0]
       end
-      APP_ROOT = path.dir(appRootScript)
+      APP_ROOT = path.dir(APP_ROOT_SCRIPT)
    end
-   ELI_LIB_VERSION = "0.1.4"
+   ELI_LIB_VERSION = "0.1.5"
 end
 
 eli_init()

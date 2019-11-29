@@ -1,5 +1,5 @@
-local encode_to_json = require"hjson".encode_to_json
-local is_tty = require"is_tty".is_stdout_tty()
+local encode_to_json = require "hjson".encode_to_json
+local is_tty = require "is_tty".is_stdout_tty()
 
 local RESET_COLOR = string.char(27) .. "[0m"
 
@@ -8,21 +8,21 @@ Logger.__index = Logger
 
 function Logger:new(options)
     local logger = {}
-    if options == nil then 
+    if options == nil then
         options = {}
     end
     if options.format == nil then
-        options.format = 'auto'
+        options.format = "auto"
     end
-    if options.format == 'auto' then
-        options.format = is_tty and 'standard' or 'json'
+    if options.format == "auto" then
+        options.format = is_tty and "standard" or "json"
     end
-    if options.colorful == nil then 
+    if options.colorful == nil then
         options.colorful = is_tty
     end
 
-    if options.level == nil then 
-        options.level = 'info'
+    if options.level == nil then
+        options.level = "info"
     end
 
     setmetatable(logger, self)
@@ -31,33 +31,36 @@ function Logger:new(options)
     return logger
 end
 
-local function get_log_color(level) 
-    if level == 'success' then
+local function get_log_color(level)
+    if level == "success" then
         return string.char(27) .. "[32m"
-    elseif level == 'debug' then
+    elseif level == "debug" then
         return string.char(27) .. "[30;1m"
-    elseif level == 'trace' then
+    elseif level == "trace" then
         return string.char(27) .. "[30;1m"
-    elseif level == 'info' then
+    elseif level == "info" then
         return string.char(27) .. "[36m"
-    elseif level == 'warn' then
+    elseif level == "warn" then
         return string.char(27) .. "[33m"
-    elseif level == 'error' then
+    elseif level == "error" then
         return string.char(27) .. "[31m"
-    else 
+    else
         return RESET_COLOR
     end
 end
 
-local function log_txt(data, colorful, color)
-    local module = ''
-    if data.module ~= nil and data.module ~= '' then 
-       module = '('..tostring(module)..') ' 
+local function log_txt(data, colorful, color, noTime)
+    local module = ""
+    if data.module ~= nil and data.module ~= "" then
+        module = "(" .. tostring(module) .. ") "
     end
+
+    local time = not noTime and os.date("%H:%M:%S") or ""
+
     if colorful then
-        print(color .. os.date('%H:%M:%S') .. ' [' .. string.upper(data.level) .. '] ' .. module .. data.msg .. RESET_COLOR)
+        print(color .. time .. " [" .. string.upper(data.level) .. "] " .. module .. data.msg .. RESET_COLOR)
     else
-        print(os.date('%H:%M:%S') .. ' [' .. string.upper(data.level) .. '] ' .. module .. data.msg)
+        print(time .. " [" .. string.upper(data.level) .. "] " .. module .. data.msg)
     end
 end
 
@@ -68,46 +71,48 @@ end
 
 local function wrap_msg(msg)
     if type(msg) ~= table then
-        return { msg = msg, level = 'info' }
+        return {msg = msg, level = "info"}
     end
     return msg
 end
 
-function Logger:log(msg, lvl)
+function Logger:log(msg, lvl, options)
+    local noTime = type(options) == "table" and options.noTime or false
+
     msg = wrap_msg(msg)
     if lvl ~= nil then
         msg.level = lvl
     end
-    if self.options.format == 'json' then
+    if self.options.format == "json" then
         log_json(msg)
-    else 
+    else
         local color = get_log_color(msg.level)
         log_txt(msg, self.options.colorful, color)
     end
 end
 
-function Logger:success(msg)
-    self:log(msg, 'success')
+function Logger:success(msg, options)
+    self:log(msg, "success", options)
 end
 
 function Logger:debug(msg)
-    self:log(msg, 'debug')
+    self:log(msg, "debug", options)
 end
 
 function Logger:trace(msg)
-    self:log(msg, 'trace')
+    self:log(msg, "trace", options)
 end
 
 function Logger:info(msg)
-    self:log(msg, 'info')
+    self:log(msg, "info", options)
 end
 
 function Logger:warn(msg)
-    self:log(msg, 'warn')
+    self:log(msg, "warn", options)
 end
 
 function Logger:error(msg)
-    self:log(msg, 'error')
+    self:log(msg, "error", options)
 end
 
 return Logger
