@@ -3,6 +3,7 @@ local dir = require "eli.path".dir
 local combine = require "eli.path".combine
 local generate_safe_functions = require "eli.util".generate_safe_functions
 local lfsLoaded, lfs = pcall(require, "lfs")
+local hash = require "hash"
 
 local function check_lfs_available(operation)
    if not lfsLoaded then
@@ -32,7 +33,7 @@ local function copy_file(src, dst)
    local srcf = assert(io.open(src, "r"), "No such a file or directory - " .. src)
    local dstf = assert(io.open(dst, "w"), "Failed to open file for write - " .. dst)
 
-   local size = 2 ^ 13 -- 8K
+   local size = 2 ^ 12 -- 4K
    while true do
       local block = srcf:read(size)
       if not block then
@@ -96,6 +97,39 @@ local function lfs_available()
    return lfsLoaded
 end
 
+local function hash_file(src, options)
+   if type(options) ~= "table" then
+      options = {}
+   end
+   if options.type ~= "sha512" then
+      options.type = "sha256"
+   end
+   local srcf = assert(io.open(src, "r"), "No such a file or directory - " .. src)
+   local size = 2 ^ 12 -- 4K
+
+   if options.type == "sha256" then
+      local ctx = hash.sha256_init()
+      while true do
+         local block = srcf:read(size)
+         if not block then
+            break
+         end
+         hash.sha256_update(ctx, block)
+      end
+      return hash.sha256_finish(ctx, options.hex)
+   else
+      local ctx = hash.sha512_init()
+      while true do
+         local block = srcf:read(size)
+         if not block then
+            break
+         end
+         hash.sha512_update(ctx, block)
+      end
+      return hash.sha512_finish(ctx, options.hex)
+   end
+end
+
 return generate_safe_functions(
    {
       write_file = write_file,
@@ -106,6 +140,7 @@ return generate_safe_functions(
       delete = delete,
       exists = exists,
       move = move,
-      lfs_available = lfs_available
+      lfs_available = lfs_available,
+      hash_file = hash_file
    }
 )
