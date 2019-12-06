@@ -11,23 +11,13 @@ local function download_file(url, destination, options)
       error("Networking not available!")
    end
 
+   local followRedirects = false
+   local verifyPeer = true
    if type(options) == "table" then
-      followRedirects = options.follow_redirects
-      verifyPeer = options.verify_peer
+      followRedirects = options.follow_redirects or followRedirects
+      verifyPeer = options.verify_peer or verifyPeer
    end
-   if verifyPeer == nil then
-      verifyPeer = true
-   end
-   if followRedirects == nil then
-      followRedirects = false
-   end
-
-   if followRedirects == nil then
-      followRedirects = true
-   end
-   if verifyPeer == nil then
-      verifyPeer = true
-   end
+   
    local f = io.open(destination, "w+b")
    curl.easy {
       url = url,
@@ -36,9 +26,37 @@ local function download_file(url, destination, options)
    f:close()
 end
 
+local function download_string(url, options) 
+   if not curlLoaded then
+      error("Networking not available!")
+   end
+
+   local followRedirects = false
+   local verifyPeer = true
+   if type(options) == "table" then
+      followRedirects = options.follow_redirects or followRedirects
+      verifyPeer = options.verify_peer
+      if verifyPeer == nil then 
+         verifyPeer = true
+      end
+   end
+   
+   local result = ""
+   local function append(data) 
+      result = result .. data
+   end
+   curl.easy {
+      url = url,
+      writefunction = append
+   }:setopt_followlocation(followRedirects):setopt_ssl_verifypeer(verifyPeer):perform():close()
+   return result
+end
+
+
 return generate_safe_functions(
    {
       download_file = download_file,
+      download_string = download_string,
       net_available = net_available
    }
 )
