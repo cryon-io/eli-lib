@@ -16,9 +16,11 @@ local function extract(source, destination, options)
 
    local ignoreRootLevelDir = false
    local transform_path = nil
+   local filter = nil
    if type(options) == "table" then
       ignoreRootLevelDir = options.ignoreRootLevelDir
       transform_path = options.transform_path
+      filter = options.filter
       if type(options.mkdirp) == "function" then
          mkdirp = options.mkdirp
       end
@@ -47,6 +49,10 @@ local function extract(source, destination, options)
    for i = 1, #zip_arch do
       local stat = zip_arch:stat(i)
 
+      if type(filter) == 'function' and not filter(stat.name) then
+         goto files_loop
+      end
+         
       local targetPath = path.filename(stat.name) -- by default we assume that mkdir is nor supported and we cannot create directories
 
       if type(transform_path) == "function" then -- if supplied transform with transform functions
@@ -84,6 +90,7 @@ local function extract(source, destination, options)
             end
          end
       end
+      ::files_loop::
    end
    zip_arch:close()
 end
