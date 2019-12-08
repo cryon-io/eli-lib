@@ -51,5 +51,6 @@ return {
    keys = keys,
    values = values,
    toArray = toArray,
-   generate_safe_functions = generate_safe_functions
+   generate_safe_functions = generate_safe_functions,
+   is_array = is_array
 }
