@@ -2,7 +2,22 @@ local lfsLoaded, lfs = pcall(require, "lfs")
 local zip = require "lzip"
 local path = require "eli.path"
 local separator = require "eli.path".default_sep()
-local generate_safe_functions = require "eli.util".generate_safe_functions
+local util = require "eli.util"
+local generate_safe_functions = util.generate_safe_functions
+local escape_magic_characters = util.escape_magic_characters
+
+local function get_root_dir(zipArch)
+   -- check whether we have all files in same dir
+   local stat = zipArch:stat(1)
+   local rootDir = stat.name:match("^.-/")
+   for i = 2, #zipArch do
+      stat = zipArch:stat(i)
+      if not stat.name:match("^" .. escape_magic_characters(rootDir)) then
+         return ""
+      end
+   end
+   return rootDir
+end
 
 local function extract(source, destination, options)
    if lfsLoaded then
@@ -28,26 +43,17 @@ local function extract(source, destination, options)
       ignoreRootLevelDir = options
    end
 
-   local zip_arch, err = zip.open(source, zip.CHECKCONS)
-   assert(zip_arch ~= nil, err)
+   local zipArch, err = zip.open(source, zip.CHECKCONS)
+   assert(zipArch ~= nil, err)
 
    local ignoreDir = ""
    if ignoreRootLevelDir then
-      -- check whether we have all files in root same dir
-      local stat = zip_arch:stat(1)
-      local rootDir = stat.name:match("^.-/")
-      for i = 2, #zip_arch do
-         stat = zip_arch:stat(i)
-         if not stat.name:match("^" .. rootDir) then
-            break
-         end
-      end
-      ignoreDir = rootDir
+      ignoreDir = get_root_dir(zipArch)
    end
    local il = #ignoreDir + 1 -- ignore length
 
-   for i = 1, #zip_arch do
-      local stat = zip_arch:stat(i)
+   for i = 1, #zipArch do
+      local stat = zipArch:stat(i)
 
       if type(filter) == 'function' and not filter(stat.name) then
          goto files_loop
@@ -67,7 +73,7 @@ local function extract(source, destination, options)
             mkdirp(targetPath)
          end
       else
-         local comprimedFile = zip_arch:open(i)
+         local comprimedFile = zipArch:open(i)
          local dir = path.dir(targetPath)
          if type(mkdirp) == "function" then
             mkdirp(dir)
@@ -83,7 +89,7 @@ local function extract(source, destination, options)
          f:close()
          if separator == "/" then
             -- unix permissions
-            local attributes = (zip_arch:get_external_attributes(i) / 2 ^ 16)
+            local attributes = (zipArch:get_external_attributes(i) / 2 ^ 16)
             local permissions = string.format("%o", attributes):sub(-3)
             if attributes ~= 0 then
                os.execute("chmod " .. permissions .. " " .. targetPath .. " > /dev/nul")
@@ -92,7 +98,7 @@ local function extract(source, destination, options)
       end
       ::files_loop::
    end
-   zip_arch:close()
+   zipArch:close()
 end
 
 local function extract_file(source, file, destination, options)
@@ -122,26 +128,17 @@ local function extract_file(source, file, destination, options)
       ignoreRootLevelDir = options
    end
 
-   local zip_arch, err = zip.open(source, zip.CHECKCONS)
-   assert(zip_arch ~= nil, err)
+   local zipArch, err = zip.open(source, zip.CHECKCONS)
+   assert(zipArch ~= nil, err)
 
    local ignoreDir = ""
    if ignoreRootLevelDir then
-      -- check whether we have all files in root same dir
-      local stat = zip_arch:stat(1)
-      local rootDir = stat.name:match("^.-/")
-      for i = 2, #zip_arch do
-         stat = zip_arch:stat(i)
-         if not stat.name:match("^" .. rootDir) then
-            break
-         end
-      end
-      ignoreDir = rootDir
+      ignoreDir = get_root_dir(zipArch)
    end
    local il = #ignoreDir + 1 -- ignore length
 
-   for i = 1, #zip_arch do
-      local stat = zip_arch:stat(i)
+   for i = 1, #zipArch do
+      local stat = zipArch:stat(i)
 
       local targetPath = path.filename(stat.name) -- by default we assume that mkdir is nor supported and we cannot create directories
 
@@ -152,7 +149,7 @@ local function extract_file(source, file, destination, options)
       end
 
       if file == stat.name:sub(il) then 
-         local comprimedFile = zip_arch:open(i)
+         local comprimedFile = zipArch:open(i)
          local dir = path.dir(targetPath)
          if type(mkdirp) == "function" then
             mkdirp(dir)
@@ -168,7 +165,7 @@ local function extract_file(source, file, destination, options)
          f:close()
          if separator == "/" then
             -- unix permissions
-            local attributes = (zip_arch:get_external_attributes(i) / 2 ^ 16)
+            local attributes = (zipArch:get_external_attributes(i) / 2 ^ 16)
             local permissions = string.format("%o", attributes):sub(-3)
             if attributes ~= 0 then
                os.execute("chmod " .. permissions .. " " .. targetPath .. " > /dev/nul")
@@ -176,7 +173,7 @@ local function extract_file(source, file, destination, options)
          end
       end
    end
-   zip_arch:close()
+   zipArch:close()
 end
 
 local function extract_string(source, file, options)
@@ -187,29 +184,20 @@ local function extract_string(source, file, options)
       ignoreRootLevelDir = options
    end
 
-   local zip_arch, err = zip.open(source, zip.CHECKCONS)
-   assert(zip_arch ~= nil, err)
+   local zipArch, err = zip.open(source, zip.CHECKCONS)
+   assert(zipArch ~= nil, err)
 
    local ignoreDir = ""
    if ignoreRootLevelDir then
-      -- check whether we have all files in root same dir
-      local stat = zip_arch:stat(1)
-      local rootDir = stat.name:match("^.-/")
-      for i = 2, #zip_arch do
-         stat = zip_arch:stat(i)
-         if not stat.name:match("^" .. rootDir) then
-            break
-         end
-      end
-      ignoreDir = rootDir
+      ignoreDir = get_root_dir(zipArch)
    end
    local il = #ignoreDir + 1 -- ignore length
 
-   for i = 1, #zip_arch do
-      local stat = zip_arch:stat(i)
+   for i = 1, #zipArch do
+      local stat = zipArch:stat(i)
 
       if file == stat.name:sub(il) then 
-         local comprimedFile = zip_arch:open(i)
+         local comprimedFile = zipArch:open(i)
         
          local result = ""
          local b = 0
@@ -219,18 +207,53 @@ local function extract_string(source, file, options)
             result = result .. bytes
             b = b + math.min(chunkSize, stat.size - b)
          end
-         zip_arch:close()
+         zipArch:close()
          return result
       end
    end
-   zip_arch:close()
+   zipArch:close()
    return nil
 end
+
+local function get_files(source, options)
+   local ignoreRootLevelDir = false
+   local transform_path = nil
+   if type(options) == "table" then
+       ignoreRootLevelDir = options.ignoreRootLevelDir
+       transform_path = options.transform_path
+   elseif type(options) == "boolean" then
+       ignoreRootLevelDir = options
+   end
+
+   local zipArch, err = zip.open(source, zip.CHECKCONS)
+   assert(zipArch ~= nil, err)
+
+   local ignoreDir = ""
+   if ignoreRootLevelDir then
+      ignoreDir = get_root_dir(zipArch)
+   end
+   local il = #ignoreDir + 1 -- ignore length
+
+   local files = {}
+   for i = 1, #zipArch do
+       local stat = zipArch:stat(i)
+       
+       local targetPath = stat.name:sub(il)
+       if type(transform_path) == "function" then -- if supplied transform with transform functions
+           targetPath = transform_path(stat.name)
+       end
+       table.insert(files, stat.name:sub(il))
+   end
+   zipArch:close()
+   return files
+end
+
 
 return generate_safe_functions(
    {
       extract = extract,
       extract_file = extract_file,
       extract_string = extract_string
+      get_files = get_files
    }
 )

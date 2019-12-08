@@ -47,10 +47,15 @@ local function generate_safe_functions(functions)
    return functions
 end
 
+function escape_magic_characters(s)
+   return (s:gsub("[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%1"))
+end
+
 return {
    keys = keys,
    values = values,
    toArray = toArray,
    generate_safe_functions = generate_safe_functions,
-   is_array = is_array
+   is_array = is_array,
+   escape_magic_characters = escape_magic_characters
 }
