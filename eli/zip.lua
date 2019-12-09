@@ -253,7 +253,7 @@ return generate_safe_functions(
    {
       extract = extract,
       extract_file = extract_file,
-      extract_string = extract_string
+      extract_string = extract_string,
       get_files = get_files
    }
 )
