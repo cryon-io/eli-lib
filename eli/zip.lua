@@ -29,40 +29,45 @@ local function extract(source, destination, options)
 
    local mkdirp = lfsLoaded and require "eli.fs".mkdirp
 
-   local ignoreRootLevelDir = false
+   local flattenRootDir = false
    local transform_path = nil
    local filter = nil
    if type(options) == "table" then
-      ignoreRootLevelDir = options.ignoreRootLevelDir
+      flattenRootDir = options.flattenRootDir
       transform_path = options.transform_path
       filter = options.filter
       if type(options.mkdirp) == "function" then
          mkdirp = options.mkdirp
       end
    elseif type(options) == "boolean" then
-      ignoreRootLevelDir = options
+      flattenRootDir = options
    end
 
    local zipArch, err = zip.open(source, zip.CHECKCONS)
    assert(zipArch ~= nil, err)
 
-   local ignoreDir = ""
-   if ignoreRootLevelDir then
-      ignoreDir = get_root_dir(zipArch)
+   local ignorePath = ""
+   if flattenRootDir then
+      ignorePath = get_root_dir(zipArch)
    end
-   local il = #ignoreDir + 1 -- ignore length
+   local il = #ignorePath + 1 -- ignore length
 
    for i = 1, #zipArch do
       local stat = zipArch:stat(i)
 
-      if type(filter) == 'function' and not filter(stat.name) then
+      if type(filter) == 'function' and not filter(stat.name:sub(il)) then
+         goto files_loop
+      end
+
+      if #stat.name:sub(il) == 0 then
+         -- skip empty paths
          goto files_loop
       end
          
       local targetPath = path.filename(stat.name) -- by default we assume that mkdir is nor supported and we cannot create directories
 
       if type(transform_path) == "function" then -- if supplied transform with transform functions
-         targetPath = transform_path(stat.name)
+         targetPath = transform_path(stat.name:sub(il))
       elseif type(mkdirp) == 'function' then --mkdir supported we can use path as is :)
          targetPath = path.combine(destination, stat.name:sub(il))
       end
@@ -116,34 +121,39 @@ local function extract_file(source, file, destination, options)
 
    local mkdirp = lfsLoaded and require "eli.fs".mkdirp
 
-   local ignoreRootLevelDir = false
+   local flattenRootDir = false
    local transform_path = nil
    if type(options) == "table" then
-      ignoreRootLevelDir = options.ignoreRootLevelDir
+      flattenRootDir = options.flattenRootDir
       transform_path = options.transform_path
       if type(options.mkdirp) == "function" then
          mkdirp = options.mkdirp
       end
    elseif type(options) == "boolean" then
-      ignoreRootLevelDir = options
+      flattenRootDir = options
    end
 
    local zipArch, err = zip.open(source, zip.CHECKCONS)
    assert(zipArch ~= nil, err)
 
-   local ignoreDir = ""
-   if ignoreRootLevelDir then
-      ignoreDir = get_root_dir(zipArch)
+   local ignorePath = ""
+   if flattenRootDir then
+      ignorePath = get_root_dir(zipArch)
    end
-   local il = #ignoreDir + 1 -- ignore length
+   local il = #ignorePath + 1 -- ignore length
 
    for i = 1, #zipArch do
       local stat = zipArch:stat(i)
 
+      if #stat.name:sub(il) == 0 then
+         -- skip empty paths
+         goto files_loop
+      end
+
       local targetPath = path.filename(stat.name) -- by default we assume that mkdir is nor supported and we cannot create directories
 
       if type(transform_path) == "function" then -- if supplied transform with transform functions
-         targetPath = transform_path(stat.name)
+         targetPath = transform_path(stat.name:sub(il))
       elseif type(mkdirp) == 'function' then --mkdir supported we can use path as is :)
          targetPath = destination
       end
@@ -172,26 +182,27 @@ local function extract_file(source, file, destination, options)
             end
          end
       end
+      ::files_loop::
    end
    zipArch:close()
 end
 
 local function extract_string(source, file, options)
-   local ignoreRootLevelDir = false
+   local flattenRootDir = false
    if type(options) == "table" then
-      ignoreRootLevelDir = options.ignoreRootLevelDir
+      flattenRootDir = options.flattenRootDir
    elseif type(options) == "boolean" then
-      ignoreRootLevelDir = options
+      flattenRootDir = options
    end
 
    local zipArch, err = zip.open(source, zip.CHECKCONS)
    assert(zipArch ~= nil, err)
 
-   local ignoreDir = ""
-   if ignoreRootLevelDir then
-      ignoreDir = get_root_dir(zipArch)
+   local ignorePath = ""
+   if flattenRootDir then
+      ignorePath = get_root_dir(zipArch)
    end
-   local il = #ignoreDir + 1 -- ignore length
+   local il = #ignorePath + 1 -- ignore length
 
    for i = 1, #zipArch do
       local stat = zipArch:stat(i)
@@ -216,33 +227,38 @@ local function extract_string(source, file, options)
 end
 
 local function get_files(source, options)
-   local ignoreRootLevelDir = false
+   local flattenRootDir = false
    local transform_path = nil
    if type(options) == "table" then
-       ignoreRootLevelDir = options.ignoreRootLevelDir
+       flattenRootDir = options.flattenRootDir
        transform_path = options.transform_path
    elseif type(options) == "boolean" then
-       ignoreRootLevelDir = options
+       flattenRootDir = options
    end
 
    local zipArch, err = zip.open(source, zip.CHECKCONS)
    assert(zipArch ~= nil, err)
 
-   local ignoreDir = ""
-   if ignoreRootLevelDir then
-      ignoreDir = get_root_dir(zipArch)
+   local ignorePath = ""
+   if flattenRootDir then
+      ignorePath = get_root_dir(zipArch)
    end
-   local il = #ignoreDir + 1 -- ignore length
+   local il = #ignorePath + 1 -- ignore length
 
    local files = {}
    for i = 1, #zipArch do
        local stat = zipArch:stat(i)
        
+       if #stat.name:sub(il) == 0 then
+         -- skip empty paths
+         goto files_loop
+      end
        local targetPath = stat.name:sub(il)
        if type(transform_path) == "function" then -- if supplied transform with transform functions
-           targetPath = transform_path(stat.name)
+           targetPath = transform_path(stat.name:sub(il))
        end
        table.insert(files, stat.name:sub(il))
+       ::files_loop::
    end
    zipArch:close()
    return files
