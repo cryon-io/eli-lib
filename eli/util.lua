@@ -51,11 +51,47 @@ function escape_magic_characters(s)
    return (s:gsub("[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%1"))
 end
 
+
+local function filter_table(t, _filter)
+   if type(_filter) ~= "function" then
+       return t
+   end
+   local isArray = is_array(t)
+
+   local res = {}
+   for k, v in pairs(t) do
+       if _filter(v, k) then
+           if isArray then
+               table.insert(res, v)
+           else
+               res[k] = v
+           end
+       end
+   end
+   return res
+end
+
+local function merge_tables(t1, t2, overwrite) 
+   for k,v2 in pairs(t2) do
+       local v1 = t1[k]         
+       if type(v1) == 'table' and type(v2) == 'table' then
+           v1 = merge_tables(v1, v2)
+       elseif type(v1) == 'nil' then
+           t1[k] = v2
+       elseif overwrite then
+           t1[k] = v2 
+       end
+   end
+   return t1
+end
+
 return {
    keys = keys,
    values = values,
    toArray = toArray,
    generate_safe_functions = generate_safe_functions,
    is_array = is_array,
-   escape_magic_characters = escape_magic_characters
+   escape_magic_characters = escape_magic_characters,
+   filter_table = filter_table,
+   merge_tables = merge_tables
 }
