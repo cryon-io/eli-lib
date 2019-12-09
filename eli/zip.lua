@@ -95,9 +95,9 @@ local function extract(source, destination, options)
          if separator == "/" then
             -- unix permissions
             local attributes = (zipArch:get_external_attributes(i) / 2 ^ 16)
-            local permissions = string.format("%o", attributes):sub(-3)
-            if attributes ~= 0 then
-               os.execute("chmod " .. permissions .. " " .. targetPath .. " > /dev/nul")
+            local valid, permissions = pcall(string.format, "%o", attributes)
+            if valid and attributes ~= 0 then
+               os.execute("chmod " .. permissions:sub(-3) .. " " .. targetPath .. " > /dev/nul")
             end
          end
       end
@@ -176,9 +176,9 @@ local function extract_file(source, file, destination, options)
          if separator == "/" then
             -- unix permissions
             local attributes = (zipArch:get_external_attributes(i) / 2 ^ 16)
-            local permissions = string.format("%o", attributes):sub(-3)
-            if attributes ~= 0 then
-               os.execute("chmod " .. permissions .. " " .. targetPath .. " > /dev/nul")
+            local valid, permissions = pcall(string.format, "%o", attributes)
+            if valid and attributes ~= 0 then
+               os.execute("chmod " .. permissions:sub(-3) .. " " .. targetPath .. " > /dev/nul")
             end
          end
       end
