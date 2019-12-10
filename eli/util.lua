@@ -36,15 +36,18 @@ local function is_array(t)
    return true
 end
 
-local function generate_safe_functions(functions)
-   for k, v in pairs(functions) do
-      if type(v) == "function" and not k:match("^safe_") then
-         functions["safe_" .. k] = function(...)
-            return pcall(v, ...)
-         end
-      end
+local function merge_tables(t1, t2, overwrite) 
+   for k,v2 in pairs(t2) do
+       local v1 = t1[k]         
+       if type(v1) == 'table' and type(v2) == 'table' then
+           v1 = merge_tables(v1, v2)
+       elseif type(v1) == 'nil' then
+           t1[k] = v2
+       elseif overwrite then
+           t1[k] = v2 
+       end
    end
-   return functions
+   return t1
 end
 
 function escape_magic_characters(s)
@@ -71,18 +74,20 @@ local function filter_table(t, _filter)
    return res
 end
 
-local function merge_tables(t1, t2, overwrite) 
-   for k,v2 in pairs(t2) do
-       local v1 = t1[k]         
-       if type(v1) == 'table' and type(v2) == 'table' then
-           v1 = merge_tables(v1, v2)
-       elseif type(v1) == 'nil' then
-           t1[k] = v2
-       elseif overwrite then
-           t1[k] = v2 
-       end
+local function generate_safe_functions(functions)
+   if type(functions) ~= 'table' then 
+      return functions
    end
-   return t1
+   local res = {}
+
+   for k, v in pairs(functions) do
+      if type(v) == "function" and not k:match("^safe_") then
+         res["safe_" .. k] = function(...)
+            return pcall(v, ...)
+         end
+      end
+   end
+   return merge_tables(functions, res)
 end
 
 return {
