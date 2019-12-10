@@ -67,7 +67,7 @@ local function extract(source, destination, options)
       local targetPath = path.filename(stat.name) -- by default we assume that mkdir is nor supported and we cannot create directories
 
       if type(transform_path) == "function" then -- if supplied transform with transform functions
-         targetPath = transform_path(stat.name:sub(il))
+         targetPath = transform_path(stat.name:sub(il), destination)
       elseif type(mkdirp) == 'function' then --mkdir supported we can use path as is :)
          targetPath = path.combine(destination, stat.name:sub(il))
       end
@@ -153,7 +153,7 @@ local function extract_file(source, file, destination, options)
       local targetPath = path.filename(stat.name) -- by default we assume that mkdir is nor supported and we cannot create directories
 
       if type(transform_path) == "function" then -- if supplied transform with transform functions
-         targetPath = transform_path(stat.name:sub(il))
+         targetPath = transform_path(stat.name:sub(il), destination)
       elseif type(mkdirp) == 'function' then --mkdir supported we can use path as is :)
          targetPath = destination
       end
