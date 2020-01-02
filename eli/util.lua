@@ -90,6 +90,15 @@ local function generate_safe_functions(functions)
    return merge_tables(functions, res)
 end
 
+local function print_table(t) 
+   if type(t) ~= 'table' then 
+      return 
+   end
+   for k, v in pairs(t) do 
+      print(k, v)
+   end
+end
+
 return {
    keys = keys,
    values = values,
@@ -98,5 +107,6 @@ return {
    is_array = is_array,
    escape_magic_characters = escape_magic_characters,
    filter_table = filter_table,
-   merge_tables = merge_tables
+   merge_tables = merge_tables,
+   print_table = print_table
 }

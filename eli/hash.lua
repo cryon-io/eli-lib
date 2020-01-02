@@ -1,4 +1,4 @@
-local hash = require "hash"
+local hash = require "lmbed_hash"
 
 local Sha256 = {}
 Sha256.__index = Sha256

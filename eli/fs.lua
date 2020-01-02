@@ -2,15 +2,16 @@ local io = require "io"
 local dir = require "eli.path".dir
 local combine = require "eli.path".combine
 local generate_safe_functions = require "eli.util".generate_safe_functions
-local lfsLoaded, lfs = pcall(require, "lfs")
-local hash = require "hash"
+local merge_tables = require "eli.util".merge_tables
+local efsLoaded, efs = pcall(require, "eli.fs.extra")
+local hash = require "lmbed_hash"
 
-local function check_lfs_available(operation)
-   if not lfsLoaded then
+local function check_efs_available(operation)
+   if not efsLoaded then
       if operation ~= nil and operation ~= "" then
-         error("LFS not available! Operation " .. operation .. " failed!")
+         error("Extra fs api not available! Operation " .. operation .. " failed!")
       else
-         error("LFS not available!")
+         error("Extra fs api not available!")
       end
    end
 end
@@ -44,35 +45,35 @@ local function copy_file(src, dst)
 end
 
 local function mkdirp(dst)
-   check_lfs_available("mkdirp")
+   check_efs_available("mkdirp")
    local parent = dir(dst)
    if parent ~= nil then
       mkdirp(parent)
    end
-   lfs.mkdir(dst)
+   efs.mkdir(dst)
 end
 
 local function delete(dst, recurse)
-   check_lfs_available("delete")
-   if lfs.attributes(dst) == nil then
+   check_efs_available("delete")
+   if efs.file_type(dst) == nil then
       return
    end
-   if lfs.attributes(dst, "mode") == "file" then
+   if efs.file_type(dst) == "file" then
       os.remove(dst)
    end
    if recurse then
-      for o in lfs.dir(dst) do
+      for o in efs.dir(dst) do
          local fullPath = combine(dst, o)
          if o ~= "." and o ~= ".." then
-            if lfs.attributes(fullPath, "mode") == "file" then
+            if efs.file_type(fullPath) == "file" then
                os.remove(fullPath)
-            elseif lfs.attributes(fullPath, "mode") == "directory" then
+            elseif efs.file_type(fullPath) == "directory" then
                delete(fullPath, recurse)
             end
          end
       end
    end
-   lfs.rmdir(dst)
+   efs.rmdir(dst)
 end
 
 local function move(src, dst)
@@ -80,8 +81,8 @@ local function move(src, dst)
 end
 
 local function exists(path)
-   check_lfs_available("exists")
-   if lfs.attributes(path) then
+   check_efs_available("exists")
+   if efs.file_type(path) then
       return true
    else
       return false
@@ -89,12 +90,8 @@ local function exists(path)
 end
 
 local function mkdir(...)
-   check_lfs_available("mkdir")
-   lfs.mkdir(...)
-end
-
-local function lfs_available()
-   return lfsLoaded
+   check_efs_available("mkdir")
+   efs.mkdir(...)
 end
 
 local function hash_file(src, options)
@@ -130,17 +127,21 @@ local function hash_file(src, options)
    end
 end
 
-return generate_safe_functions(
-   {
-      write_file = write_file,
-      read_file = read_file,
-      copy_file = copy_file,
-      mkdir = mkdir,
-      mkdirp = mkdirp,
-      delete = delete,
-      exists = exists,
-      move = move,
-      lfs_available = lfs_available,
-      hash_file = hash_file
-   }
-)
+local fs = {
+   write_file = write_file,
+   read_file = read_file,
+   copy_file = copy_file,
+   mkdir = mkdir,
+   mkdirp = mkdirp,
+   delete = delete,
+   exists = exists,
+   move = move,
+   EFS = efsLoaded,
+   hash_file = hash_file
+}
+
+if efsLoaded then 
+   return generate_safe_functions(merge_tables(fs, efs))
+else 
+   return generate_safe_functions(fs)
+end

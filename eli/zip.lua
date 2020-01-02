@@ -1,4 +1,4 @@
-local lfsLoaded, lfs = pcall(require, "lfs")
+local efsLoaded, efs = pcall(require, "eli.fs.extra")
 local zip = require "lzip"
 local path = require "eli.path"
 local separator = require "eli.path".default_sep()
@@ -20,14 +20,14 @@ local function get_root_dir(zipArch)
 end
 
 local function extract(source, destination, options)
-   if lfsLoaded then
+   if efsLoaded then
       assert(
-         lfs.attributes(destination, "mode") == "directory",
+         efs.file_type(destination) == "directory",
          "Destination not found or is not a directory: " .. destination
       )
    end
 
-   local mkdirp = lfsLoaded and require "eli.fs".mkdirp
+   local mkdirp = efsLoaded and require "eli.fs".mkdirp
 
    local flattenRootDir = false
    local transform_path = nil
@@ -112,14 +112,14 @@ local function extract_file(source, file, destination, options)
       destination = file
    end
 
-   if lfsLoaded then
+   if efsLoaded then
       assert(
-         lfs.attributes(destination, "mode") ~= "directory",
+         efs.file_type(destination) ~= "directory",
          "Destination is a directory: " .. destination
       )
    end
 
-   local mkdirp = lfsLoaded and require "eli.fs".mkdirp
+   local mkdirp = efsLoaded and require "eli.fs".mkdirp
 
    local flattenRootDir = false
    local transform_path = nil
