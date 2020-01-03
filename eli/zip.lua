@@ -1,4 +1,4 @@
-local efsLoaded, efs = pcall(require, "eli.fs.extra")
+local fs = require "eli.fs"
 local zip = require "lzip"
 local path = require "eli.path"
 local separator = require "eli.path".default_sep()
@@ -20,14 +20,15 @@ local function get_root_dir(zipArch)
 end
 
 local function extract(source, destination, options)
-   if efsLoaded then
+   if fs.EFS then
       assert(
-         efs.file_type(destination) == "directory",
+         fs.file_type(destination) == "directory",
          "Destination not found or is not a directory: " .. destination
       )
    end
 
-   local mkdirp = efsLoaded and require "eli.fs".mkdirp
+   local mkdirp = fs.EFS and fs.mkdirp
+   local chmod = fs.EFS and fs.chmod
 
    local flattenRootDir = false
    local transform_path = nil
@@ -38,6 +39,9 @@ local function extract(source, destination, options)
       filter = options.filter
       if type(options.mkdirp) == "function" then
          mkdirp = options.mkdirp
+      end
+      if type(options.chmod) == "function" then
+         chmod = options.chmod
       end
    elseif type(options) == "boolean" then
       flattenRootDir = options
@@ -92,13 +96,9 @@ local function extract(source, destination, options)
             b = b + math.min(chunkSize, stat.size - b)
          end
          f:close()
-         if separator == "/" then
-            -- unix permissions
+         if type(chmod) == 'function' then 
             local attributes = (zipArch:get_external_attributes(i) / 2 ^ 16)
-            local valid, permissions = pcall(string.format, "%o", attributes)
-            if valid and attributes ~= 0 then
-               os.execute("chmod " .. permissions:sub(-3) .. " " .. targetPath .. " > /dev/nul")
-            end
+            pcall(chmod, targetPath, attributes)
          end
       end
       ::files_loop::
@@ -112,14 +112,15 @@ local function extract_file(source, file, destination, options)
       destination = file
    end
 
-   if efsLoaded then
+   if fs.EFS then
       assert(
-         efs.file_type(destination) ~= "directory",
+         fs.file_type(destination) ~= "directory",
          "Destination is a directory: " .. destination
       )
    end
 
-   local mkdirp = efsLoaded and require "eli.fs".mkdirp
+   local mkdirp = fs.EFS and fs.mkdirp
+   local chmod = fs.EFS and fs.chmod
 
    local flattenRootDir = false
    local transform_path = nil
@@ -128,6 +129,9 @@ local function extract_file(source, file, destination, options)
       transform_path = options.transform_path
       if type(options.mkdirp) == "function" then
          mkdirp = options.mkdirp
+      end
+      if type(options.chmod) == "function" then
+         chmod = options.chmod
       end
    elseif type(options) == "boolean" then
       flattenRootDir = options
@@ -173,13 +177,9 @@ local function extract_file(source, file, destination, options)
             b = b + math.min(chunkSize, stat.size - b)
          end
          f:close()
-         if separator == "/" then
-            -- unix permissions
+         if type(chmod) == 'function' then 
             local attributes = (zipArch:get_external_attributes(i) / 2 ^ 16)
-            local valid, permissions = pcall(string.format, "%o", attributes)
-            if valid and attributes ~= 0 then
-               os.execute("chmod " .. permissions:sub(-3) .. " " .. targetPath .. " > /dev/nul")
-            end
+            pcall(chmod, targetPath, attributes)
          end
       end
       ::files_loop::
