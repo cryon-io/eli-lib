@@ -1,8 +1,9 @@
 local io = require "io"
 local dir = require "eli.path".dir
 local combine = require "eli.path".combine
-local generate_safe_functions = require "eli.util".generate_safe_functions
-local merge_tables = require "eli.util".merge_tables
+local util = require"eli.util"
+local generate_safe_functions = util.generate_safe_functions
+local merge_tables = util.merge_tables
 local efsLoaded, efs = pcall(require, "eli.fs.extra")
 local hash = require "lmbed_hash"
 

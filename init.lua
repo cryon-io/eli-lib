@@ -1,6 +1,6 @@
 local function eli_init()
-   local path = require "eli.path"
-   local lfsLoaded, lfs = pcall(require, "lfs")
+   local path = require"eli.path"
+   local proc = require"eli.proc"
    local i_min = 0
    while arg[i_min] do
       i_min = i_min - 1
@@ -36,25 +36,21 @@ local function eli_init()
       if identified then
          interpreter = _interpreter
       end
-   elseif not path.isabs(interpreter) then
-      if lfsLoaded then
-         interpreter = path.abs(interpreter, lfs.currentdir())
-      else
-         interpreter = inter
-      end
+   elseif not path.isabs(interpreter) and proc.EPROC then
+      interpreter = path.abs(interpreter, proc.cwd())
    end
 
    if i_min == -1 then -- we are running without script (interactive mode)
       APP_ROOT = nil
    else
-      if lfsLoaded then
-         APP_ROOT_SCRIPT = path.abs(arg[0], lfs.currentdir())
+      if proc.EPROC then
+         APP_ROOT_SCRIPT = path.abs(arg[0], lfs.cwd())
       else
          APP_ROOT_SCRIPT = arg[0]
       end
       APP_ROOT = path.dir(APP_ROOT_SCRIPT)
    end
-   ELI_LIB_VERSION = "0.2.8"
+   ELI_LIB_VERSION = "0.2.9"
 end
 
 eli_init()
