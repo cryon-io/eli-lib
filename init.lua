@@ -30,14 +30,14 @@ local function eli_init()
       end
    end
 
-   interpreter = arg[i_min + 1]
-   if not interpreter:match(path.default_sep()) then
-      local identified, _interpreter = pcall(try_identify_interpreter, interpreter)
+   INTERPRETER = arg[i_min + 1]
+   if not INTERPRETER:match(path.default_sep()) then
+      local identified, _interpreter = pcall(try_identify_interpreter, INTERPRETER)
       if identified then
-         interpreter = _interpreter
+         INTERPRETER = _interpreter
       end
-   elseif not path.isabs(interpreter) and proc.EPROC then
-      interpreter = path.abs(interpreter, proc.cwd())
+   elseif not path.isabs(INTERPRETER) and proc.EPROC then
+      INTERPRETER = path.abs(INTERPRETER, proc.cwd())
    end
 
    if i_min == -1 then -- we are running without script (interactive mode)
