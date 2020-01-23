@@ -1,5 +1,9 @@
-local encode_to_json = require "hjson".encode_to_json
+local hjson = require"hjson"
+local encode_to_hjson = hjson.encode
+local encode_to_json = hjson.encode_to_json
+
 local is_tty = require "is_tty".is_stdout_tty()
+local util = require"eli.util"
 
 local RESET_COLOR = string.char(27) .. "[0m"
 
@@ -24,6 +28,11 @@ function Logger:new(options)
     if options.level == nil then
         options.level = "info"
     end
+
+    if options.includeFields == nil then
+        options.includeFields = true
+    end
+
     logger.__type = "ELI_LOGGER"
     logger.options = options
 
@@ -65,13 +74,33 @@ local function _level_value(lvl)
     return _lvl
 end
 
-local function log_txt(data, colorful, color, noTime)
+local function log_txt(data, colorful, color, noTime, includeFields)
     local module = ""
     if data.module ~= nil and data.module ~= "" then
         module = "(" .. tostring(data.module) .. ") "
     end
 
     local time = not noTime and os.date("%H:%M:%S") or ""
+
+    if data.msg:sub(#data.msg, #data.msg) == '\n' then
+        data.msg = data.msg:sub(1, #data.msg - 1)
+    end
+
+    if includeFields then 
+
+        if not util.is_array(includeFields) then
+            includeFields = util.filter_table(util.keys(data), function(k,v) return v ~= 'msg' and v ~= 'module' end)
+        end
+
+        local _fields = {}
+        local _any = false
+        for i,v in ipairs(includeFields) do 
+            _any = true
+            _fields[v] = data[v]
+        end
+        local _addition = _any and ('\n' .. encode_to_hjson(_fields)) or ''
+        data.msg = data.msg .. _addition
+    end
 
     if colorful then
         print(color .. time .. " [" .. string.upper(data.level) .. "] " .. module .. data.msg .. RESET_COLOR)
@@ -107,7 +136,7 @@ function Logger:log(msg, lvl, options)
         log_json(msg)
     else
         local color = get_log_color(msg.level)
-        log_txt(msg, self.options.colorful, color)
+        log_txt(msg, self.options.colorful, color, self.options.noTime, self.options.includeFields)
     end
 end
 

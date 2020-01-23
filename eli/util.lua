@@ -63,7 +63,7 @@ local function filter_table(t, _filter)
 
    local res = {}
    for k, v in pairs(t) do
-       if _filter(v, k) then
+       if _filter(k, v) then
            if isArray then
                table.insert(res, v)
            else
