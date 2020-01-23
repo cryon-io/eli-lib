@@ -24,10 +24,11 @@ function Logger:new(options)
     if options.level == nil then
         options.level = "info"
     end
+    logger.__type = "ELI_LOGGER"
+    logger.options = options
 
     setmetatable(logger, self)
     self.__index = self
-    logger.options = options
     return logger
 end
 
@@ -49,10 +50,25 @@ local function get_log_color(level)
     end
 end
 
+local _levelValueMap = {
+    ["error"] = 2,
+    ["warn"] = 1,
+    ["success"] = 0,
+    ["info"] = 0,
+    ["debug"] = -1,
+    ["trace"] = -2,
+}
+
+local function _level_value(lvl)
+    local _lvl = _levelValueMap[lvl]
+    if (type(_lvl) == nil) then return 0 end 
+    return _lvl
+end
+
 local function log_txt(data, colorful, color, noTime)
     local module = ""
     if data.module ~= nil and data.module ~= "" then
-        module = "(" .. tostring(module) .. ") "
+        module = "(" .. tostring(data.module) .. ") "
     end
 
     local time = not noTime and os.date("%H:%M:%S") or ""
@@ -70,7 +86,7 @@ local function log_json(data)
 end
 
 local function wrap_msg(msg)
-    if type(msg) ~= table then
+    if type(msg) ~= 'table' then
         return {msg = msg, level = "info"}
     end
     return msg
@@ -83,6 +99,10 @@ function Logger:log(msg, lvl, options)
     if lvl ~= nil then
         msg.level = lvl
     end
+    if _level_value(self.options.level) > _level_value(lvl) then 
+        return
+    end
+
     if self.options.format == "json" then
         log_json(msg)
     else
@@ -95,23 +115,23 @@ function Logger:success(msg, options)
     self:log(msg, "success", options)
 end
 
-function Logger:debug(msg)
+function Logger:debug(msg, options)
     self:log(msg, "debug", options)
 end
 
-function Logger:trace(msg)
+function Logger:trace(msg, options)
     self:log(msg, "trace", options)
 end
 
-function Logger:info(msg)
+function Logger:info(msg, options)
     self:log(msg, "info", options)
 end
 
-function Logger:warn(msg)
+function Logger:warn(msg, options)
     self:log(msg, "warn", options)
 end
 
-function Logger:error(msg)
+function Logger:error(msg, options)
     self:log(msg, "error", options)
 end
 
