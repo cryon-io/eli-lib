@@ -99,6 +99,27 @@ local function print_table(t)
    end
 end
 
+local function _global_log_factory(module, lvl)
+   if not is_array(lvl) then
+       lvl = { lvl }
+   end
+   local _result = {}
+   for k,v in ipairs(lvl) do
+      if type(GLOBAL_LOGGER) ~= 'table' and GLOBAL_LOGGER.__type ~= 'ELI_LOGGER' then
+         table.insert(_result, function() end)
+      else
+         table.insert(_result, function(msg)
+            if type(msg) ~= 'table' then
+                msg = { msg = msg }
+            end
+            msg.module = module
+            return GLOBAL_LOGGER:log(msg, v)
+         end)
+      end
+   end
+   return table.unpack(_result)
+end
+
 return {
    keys = keys,
    values = values,
@@ -108,5 +129,6 @@ return {
    escape_magic_characters = escape_magic_characters,
    filter_table = filter_table,
    merge_tables = merge_tables,
-   print_table = print_table
+   print_table = print_table,
+   global_log_factory = _global_log_factory
 }

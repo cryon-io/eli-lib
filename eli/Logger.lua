@@ -69,6 +69,7 @@ local _levelValueMap = {
 }
 
 local function _level_value(lvl)
+    if type(lvl) ~= 'string' then return 0 end
     local _lvl = _levelValueMap[lvl]
     if (type(_lvl) == nil) then return 0 end 
     return _lvl
@@ -89,7 +90,7 @@ local function log_txt(data, colorful, color, noTime, includeFields)
     if includeFields then 
 
         if not util.is_array(includeFields) then
-            includeFields = util.filter_table(util.keys(data), function(k,v) return v ~= 'msg' and v ~= 'module' end)
+            includeFields = util.filter_table(util.keys(data), function(k,v) return v ~= 'msg' and v ~= 'module' and v ~= 'level' end)
         end
 
         local _fields = {}
