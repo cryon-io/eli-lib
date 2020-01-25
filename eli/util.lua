@@ -99,12 +99,9 @@ local function print_table(t)
    end
 end
 
-local function _global_log_factory(module, lvl)
-   if not is_array(lvl) then
-       lvl = { lvl }
-   end
+local function _global_log_factory(module, ...)
    local _result = {}
-   for k,v in ipairs(lvl) do
+   for i,v in ipairs({...}) do
       if type(GLOBAL_LOGGER) ~= 'table' and GLOBAL_LOGGER.__type ~= 'ELI_LOGGER' then
          table.insert(_result, function() end)
       else
