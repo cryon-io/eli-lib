@@ -1,4 +1,6 @@
 local hash = require "lmbed_hash"
+local util = require"eli.util"
+local generate_safe_functions = util.generate_safe_functions
 
 local Sha256 = {}
 Sha256.__index = Sha256

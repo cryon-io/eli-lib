@@ -2,9 +2,7 @@ local curlLoaded, curl = pcall(require, "cURL") -- "lcurl.safe"
 local io = require "io"
 local generate_safe_functions = require "eli.util".generate_safe_functions
 
-local function net_available()
-   return curlLoaded
-end
+assert(curlLoaded, "eli.net requires cURL")
 
 local function download_file(url, destination, options)
    if not curlLoaded then
@@ -56,7 +54,6 @@ end
 return generate_safe_functions(
    {
       download_file = download_file,
-      download_string = download_string,
-      net_available = net_available
+      download_string = download_string
    }
 )

@@ -7,7 +7,7 @@ local merge_tables = util.merge_tables
 local efsLoaded, efs = pcall(require, "eli.fs.extra")
 local hash = require "lmbed_hash"
 
-local function check_efs_available(operation)
+local function _check_efs_available(operation)
    if not efsLoaded then
       if operation ~= nil and operation ~= "" then
          error("Extra fs api not available! Operation " .. operation .. " failed!")
@@ -46,7 +46,7 @@ local function copy_file(src, dst)
 end
 
 local function mkdirp(dst)
-   check_efs_available("mkdirp")
+   _check_efs_available("mkdirp")
    local parent = dir(dst)
    if parent ~= nil then
       mkdirp(parent)
@@ -55,15 +55,21 @@ local function mkdirp(dst)
 end
 
 local function delete(dst, recurse)
-   check_efs_available("delete")
+   if not efsLoaded then
+      -- fallback to os delete
+      os.delete(dst)
+      return
+   end
+   
    if efs.file_type(dst) == nil then
       return
    end
    if efs.file_type(dst) == "file" then
       os.remove(dst)
+      return
    end
    if recurse then
-      for o in efs.dir(dst) do
+      for o in efs.iter_dir(dst) do
          local fullPath = combine(dst, o)
          if o ~= "." and o ~= ".." then
             if efs.file_type(fullPath) == "file" then
@@ -82,7 +88,7 @@ local function move(src, dst)
 end
 
 local function exists(path)
-   check_efs_available("exists")
+   _check_efs_available("exists")
    if efs.file_type(path) then
       return true
    else
@@ -91,7 +97,7 @@ local function exists(path)
 end
 
 local function mkdir(...)
-   check_efs_available("mkdir")
+   _check_efs_available("mkdir")
    efs.mkdir(...)
 end
 
@@ -142,7 +148,9 @@ local fs = {
 }
 
 if efsLoaded then 
-   return generate_safe_functions(merge_tables(fs, efs))
+   local result = generate_safe_functions(merge_tables(fs, efs))
+   result.safe_iter_dir = nil -- not supported
+   return result
 else 
    return generate_safe_functions(fs)
 end

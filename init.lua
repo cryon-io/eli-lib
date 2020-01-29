@@ -50,7 +50,7 @@ local function eli_init()
       end
       APP_ROOT = path.dir(APP_ROOT_SCRIPT)
    end
-   ELI_LIB_VERSION = "0.3.4"
+   ELI_LIB_VERSION = "0.3.5"
 end
 
 eli_init()
