@@ -16,7 +16,7 @@ local function get_root_dir(zipArch)
          return ""
       end
    end
-   return rootDir
+   return rootDir or ""
 end
 
 local function extract(source, destination, options)
@@ -88,7 +88,8 @@ local function extract(source, destination, options)
             mkdirp(dir)
          end
          local b = 0
-         local f = io.open(targetPath, "w+b")
+         local f, _error = io.open(targetPath, "w+b")
+         assert(f, "Failed to open file: " .. targetPath .. " because of: " .. (_error or ""))
          local chunkSize = 2 ^ 13 -- 8K
          while b < stat.size do
             local bytes = comprimedFile:read(math.min(chunkSize, stat.size - b))
@@ -121,7 +122,7 @@ local function extract_file(source, file, destination, options)
 
    local mkdirp = fs.EFS and fs.mkdirp
    local chmod = fs.EFS and fs.chmod
-
+   
    local flattenRootDir = false
    local transform_path = nil
    if type(options) == "table" then
@@ -169,7 +170,8 @@ local function extract_file(source, file, destination, options)
             mkdirp(dir)
          end
          local b = 0
-         local f = io.open(targetPath, "w+b")
+         local f, _error = io.open(targetPath, "w+b")
+         assert(f, "Failed to open file: " .. targetPath .. " because of: " .. (_error or ""))
          local chunkSize = 2 ^ 13 -- 8K
          while b < stat.size do
             local bytes = comprimedFile:read(math.min(chunkSize, stat.size - b))

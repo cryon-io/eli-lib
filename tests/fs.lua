@@ -14,7 +14,7 @@ if not _ok then
         return 
     end
 end
--- You can use 'assert' to check invariants.
+
 _test["eli.fs available"] = function ()
     _test.assert(true)
 end
@@ -100,9 +100,6 @@ _test["delete (recurse)"] = function ()
 end
 
 if not _eliFs.EFS then
-    _test["ELI FS available"] = function ()
-        _test.assert(false, "eli.fs not available")
-    end
     if not TEST then 
         local _ntests, _nfailed = _test.result()
         _test.summary()
@@ -170,9 +167,6 @@ _test["lock_dir & unlock_dir"] = function ()
 end
 
 if not TEST then 
-    -- obtain total number of tests and numer of failed tests
     local _ntests, _nfailed = _test.result()
-
-    -- this code prints tests summary and invokes os.exit with 0 or 1
     _test.summary()
 end

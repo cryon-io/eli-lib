@@ -15,7 +15,6 @@ if not _ok then
     end
 end
 
--- You can use 'assert' to check invariants.
 _test["eli.hash available"] = function ()
     _test.assert(true)
 end
@@ -56,9 +55,6 @@ end
 
 
 if not TEST then 
-    -- obtain total number of tests and numer of failed tests
     local _ntests, _nfailed = _test.result()
-
-    -- this code prints tests summary and invokes os.exit with 0 or 1
     _test.summary()
 end

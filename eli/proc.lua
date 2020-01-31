@@ -14,7 +14,9 @@ end
 
 local proc = {
    execute_get_output = execute_get_output,
-   popen = io.popen
+   execute = os.execute,
+   popen = io.popen,
+   EPROC = eprocLoaded
 }
 
 if not eprocLoaded or type(fs.pipe) ~= 'function' then 
