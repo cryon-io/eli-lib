@@ -44,13 +44,13 @@ local function eli_init()
       APP_ROOT = nil
    else
       if proc.EPROC then
-         APP_ROOT_SCRIPT = path.abs(arg[0], lfs.cwd())
+         APP_ROOT_SCRIPT = path.abs(arg[0], proc.cwd())
       else
          APP_ROOT_SCRIPT = arg[0]
       end
       APP_ROOT = path.dir(APP_ROOT_SCRIPT)
    end
-   ELI_LIB_VERSION = "0.3.7"
+   ELI_LIB_VERSION = "0.3.8"
 end
 
 eli_init()
