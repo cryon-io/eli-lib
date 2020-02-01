@@ -12,7 +12,7 @@ local function download_file(url, destination, options)
    local followRedirects = false
    local verifyPeer = true
    if type(options) == "table" then
-      followRedirects = options.follow_redirects or followRedirects
+      followRedirects = options.followRedirects or followRedirects
       verifyPeer = options.verify_peer or verifyPeer
    end
    
@@ -32,7 +32,7 @@ local function download_string(url, options)
    local followRedirects = false
    local verifyPeer = true
    if type(options) == "table" then
-      followRedirects = options.follow_redirects or followRedirects
+      followRedirects = options.followRedirects or followRedirects
       verifyPeer = options.verify_peer
       if verifyPeer == nil then 
          verifyPeer = true
