@@ -102,7 +102,7 @@ end
 local function _global_log_factory(module, ...)
    local _result = {}
    for i,v in ipairs({...}) do
-      if type(GLOBAL_LOGGER) ~= 'table' and GLOBAL_LOGGER.__type ~= 'ELI_LOGGER' then
+      if type(GLOBAL_LOGGER) ~= 'table' or GLOBAL_LOGGER.__type ~= 'ELI_LOGGER' then
          table.insert(_result, function() end)
       else
          table.insert(_result, function(msg)
