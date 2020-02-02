@@ -32,7 +32,7 @@ end
 _test["join_strings"] = function()
     local _result = _exString.join_strings(", ", "test", "join", {test = "string"}, "string")
     _test.assert(_result == "test, join, string")
-    local _ok, _result = pcall(_exString.join, ", ", "test", {"join"}, "string")
+    local _ok, _result = pcall(_exString.join_strings, ", ", "test", {"join"}, "string")
     _test.assert(_ok)
 end
 
