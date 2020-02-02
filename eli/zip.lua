@@ -21,10 +21,7 @@ end
 
 local function extract(source, destination, options)
    if fs.EFS then
-      assert(
-         fs.file_type(destination) == "directory",
-         "Destination not found or is not a directory: " .. destination
-      )
+      assert(fs.file_type(destination) == "directory", "Destination not found or is not a directory: " .. destination)
    end
 
    local mkdirp = fs.EFS and fs.mkdirp
@@ -33,6 +30,7 @@ local function extract(source, destination, options)
    local flattenRootDir = false
    local transform_path = nil
    local filter = nil
+   local _externalChmod = false
    if type(options) == "table" then
       flattenRootDir = options.flattenRootDir
       transform_path = options.transform_path
@@ -42,6 +40,7 @@ local function extract(source, destination, options)
       end
       if type(options.chmod) == "function" then
          chmod = options.chmod
+         _externalChmod = true
       end
    elseif type(options) == "boolean" then
       flattenRootDir = options
@@ -59,7 +58,7 @@ local function extract(source, destination, options)
    for i = 1, #zipArch do
       local stat = zipArch:stat(i)
 
-      if type(filter) == 'function' and not filter(stat.name:sub(il)) then
+      if type(filter) == "function" and not filter(stat.name:sub(il)) then
          goto files_loop
       end
 
@@ -67,12 +66,12 @@ local function extract(source, destination, options)
          -- skip empty paths
          goto files_loop
       end
-         
+
       local targetPath = path.filename(stat.name) -- by default we assume that mkdir is nor supported and we cannot create directories
 
       if type(transform_path) == "function" then -- if supplied transform with transform functions
          targetPath = transform_path(stat.name:sub(il), destination)
-      elseif type(mkdirp) == 'function' then --mkdir supported we can use path as is :)
+      elseif type(mkdirp) == "function" then --mkdir supported we can use path as is :)
          targetPath = path.combine(destination, stat.name:sub(il))
       end
 
@@ -97,9 +96,17 @@ local function extract(source, destination, options)
             b = b + math.min(chunkSize, stat.size - b)
          end
          f:close()
-         if type(chmod) == 'function' then 
-            local attributes = (zipArch:get_external_attributes(i) / 2 ^ 16)
-            pcall(chmod, targetPath, attributes)
+         if type(chmod) == "function" then
+            local _externalAtrributes = zipArch:get_external_attributes(i)
+            if _externalChmod then -- we got supplied chmod
+               chmod(targetPath, _externalAtrributes)
+            else -- we use built in chmod
+               local _permAttributes = (_externalAtrributes / 2 ^ 16)
+               local _valid, _permissions = pcall(string.format, "%o", _permAttributes)
+               if _valid and tonumber(_permissions) ~= 0 then
+                  pcall(chmod, targetPath, tonumber(_permissions))
+               end
+            end
          end
       end
       ::files_loop::
@@ -108,23 +115,21 @@ local function extract(source, destination, options)
 end
 
 local function extract_file(source, file, destination, options)
-   if type(destination) == 'table' and options == nil then 
+   if type(destination) == "table" and options == nil then
       options = destination
       destination = file
    end
 
    if fs.EFS then
-      assert(
-         fs.file_type(destination) ~= "directory",
-         "Destination is a directory: " .. destination
-      )
+      assert(fs.file_type(destination) ~= "directory", "Destination is a directory: " .. destination)
    end
 
    local mkdirp = fs.EFS and fs.mkdirp
    local chmod = fs.EFS and fs.chmod
-   
+
    local flattenRootDir = false
    local transform_path = nil
+   local _externalChmod = false
    if type(options) == "table" then
       flattenRootDir = options.flattenRootDir
       transform_path = options.transform_path
@@ -133,6 +138,7 @@ local function extract_file(source, file, destination, options)
       end
       if type(options.chmod) == "function" then
          chmod = options.chmod
+         _externalChmod = true
       end
    elseif type(options) == "boolean" then
       flattenRootDir = options
@@ -159,11 +165,11 @@ local function extract_file(source, file, destination, options)
 
       if type(transform_path) == "function" then -- if supplied transform with transform functions
          targetPath = transform_path(stat.name:sub(il), destination)
-      elseif type(mkdirp) == 'function' then --mkdir supported we can use path as is :)
+      elseif type(mkdirp) == "function" then --mkdir supported we can use path as is :)
          targetPath = destination
       end
 
-      if file == stat.name:sub(il) then 
+      if file == stat.name:sub(il) then
          local comprimedFile = zipArch:open(i)
          local dir = path.dir(targetPath)
          if type(mkdirp) == "function" then
@@ -179,9 +185,17 @@ local function extract_file(source, file, destination, options)
             b = b + math.min(chunkSize, stat.size - b)
          end
          f:close()
-         if type(chmod) == 'function' then 
-            local attributes = (zipArch:get_external_attributes(i) / 2 ^ 16)
-            pcall(chmod, targetPath, attributes)
+         if type(chmod) == "function" then
+            local _externalAtrributes = zipArch:get_external_attributes(i)
+            if _externalChmod then -- we got supplied chmod, we leave validation for the caller
+               chmod(targetPath, _externalAtrributes)
+            else -- we use built in chmod
+               local _permAttributes = (_externalAtrributes / 2 ^ 16)
+               local _valid, _permissions = pcall(string.format, "%o", _permAttributes)
+               if _valid and tonumber(_permissions) ~= 0 then
+                  pcall(chmod, targetPath, tonumber(_permissions))
+               end
+            end
          end
       end
       ::files_loop::
@@ -209,9 +223,9 @@ local function extract_string(source, file, options)
    for i = 1, #zipArch do
       local stat = zipArch:stat(i)
 
-      if file == stat.name:sub(il) then 
+      if file == stat.name:sub(il) then
          local comprimedFile = zipArch:open(i)
-        
+
          local result = ""
          local b = 0
          local chunkSize = 2 ^ 13 -- 8K
@@ -232,10 +246,10 @@ local function get_files(source, options)
    local flattenRootDir = false
    local transform_path = nil
    if type(options) == "table" then
-       flattenRootDir = options.flattenRootDir
-       transform_path = options.transform_path
+      flattenRootDir = options.flattenRootDir
+      transform_path = options.transform_path
    elseif type(options) == "boolean" then
-       flattenRootDir = options
+      flattenRootDir = options
    end
 
    local zipArch, err = zip.open(source, zip.CHECKCONS)
@@ -249,23 +263,22 @@ local function get_files(source, options)
 
    local files = {}
    for i = 1, #zipArch do
-       local stat = zipArch:stat(i)
-       
-       if #stat.name:sub(il) == 0 then
+      local stat = zipArch:stat(i)
+
+      if #stat.name:sub(il) == 0 then
          -- skip empty paths
          goto files_loop
       end
-       local targetPath = stat.name:sub(il)
-       if type(transform_path) == "function" then -- if supplied transform with transform functions
-           targetPath = transform_path(stat.name:sub(il))
-       end
-       table.insert(files, stat.name:sub(il))
-       ::files_loop::
+      local targetPath = stat.name:sub(il)
+      if type(transform_path) == "function" then -- if supplied transform with transform functions
+         targetPath = transform_path(stat.name:sub(il))
+      end
+      table.insert(files, stat.name:sub(il))
+      ::files_loop::
    end
    zipArch:close()
    return files
 end
-
 
 return generate_safe_functions(
    {

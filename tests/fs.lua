@@ -71,15 +71,15 @@ _test["mkdirp"] = function ()
     _test.assert(_ok and _exists, (_exists or "not exists"))
 end
 
-_test["delete (file)"] = function ()
-    local _ok, _file1 = _eliFs.safe_delete("tmp/test.file2")
+_test["remove (file)"] = function ()
+    local _ok, _file1 = _eliFs.safe_remove("tmp/test.file2")
     _test.assert(_ok, _file1)
     local _ok, _file2 = _eliFs.safe_read_file("tmp/test.file2")
     _test.assert(not _ok, _file2)
 end
 
-_test["delete (dir)"] = function ()
-    local _ok, _file1 = _eliFs.safe_delete("tmp/test-dir/test/test")
+_test["remove (dir)"] = function ()
+    local _ok, _file1 = _eliFs.safe_remove("tmp/test-dir/test/test")
     _test.assert(_ok, _file1)
     local _ok, _exists = _eliFs.safe_exists("tmp/test-dir/test/test")
     _test.assert(_ok and not _exists)
@@ -92,8 +92,8 @@ _test["move (dir)"] = function ()
     _test.assert(_ok and _exists, _exists)
 end
 
-_test["delete (recurse)"] = function ()
-    local _ok, _error = _eliFs.safe_delete("tmp/test-dir", true)
+_test["remove (recurse)"] = function ()
+    local _ok, _error = _eliFs.safe_remove("tmp/test-dir", true)
     _test.assert(_ok, _error)
     local _ok, _exists = _eliFs.safe_exists("tmp/test-dir")
     _test.assert(_ok and not _exists, _exists)

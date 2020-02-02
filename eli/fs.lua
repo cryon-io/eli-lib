@@ -54,10 +54,10 @@ local function mkdirp(dst)
    efs.mkdir(dst)
 end
 
-local function delete(dst, recurse)
+local function _remove(dst, recurse)
    if not efsLoaded then
       -- fallback to os delete
-      os.delete(dst)
+      os.remove(dst)
       return
    end
    
@@ -75,7 +75,7 @@ local function delete(dst, recurse)
             if efs.file_type(fullPath) == "file" then
                os.remove(fullPath)
             elseif efs.file_type(fullPath) == "directory" then
-               delete(fullPath, recurse)
+               _remove(fullPath, recurse)
             end
          end
       end
@@ -140,7 +140,7 @@ local fs = {
    copy_file = copy_file,
    mkdir = mkdir,
    mkdirp = mkdirp,
-   delete = delete,
+   remove = _remove,
    exists = exists,
    move = move,
    EFS = efsLoaded,

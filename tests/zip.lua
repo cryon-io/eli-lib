@@ -22,7 +22,7 @@ _test["eli.zip available"] = function ()
 end
 
 _test["extract"] = function ()
-    _eliFs.delete("tmp/test.file")
+    _eliFs.remove("tmp/test.file")
     local _ok, _error = _eliZip.safe_extract("test.zip", "tmp")
     _test.assert(_ok, _error)
     local _ok, _hash = _eliFs.safe_hash_file("tmp/test.file", {hex = true})
@@ -33,7 +33,7 @@ _test["extract"] = function ()
 end
 
 _test["extract_file"] = function ()
-    _eliFs.delete("tmp/test.file.unzipped")
+    _eliFs.remove("tmp/test.file.unzipped")
     local _ok, _error = _eliZip.safe_extract_file("test.zip", "test.file", "tmp/test.file.unzipped")
     _test.assert(_ok, _error)
     local _ok, _hash = _eliFs.safe_hash_file("tmp/test.file.unzipped", {hex = true})
