@@ -14,7 +14,7 @@ local function values(t)
    return vals
 end
 
-local function toArray(t)
+local function _to_array(t)
    local arr = {}
    for k, v in pairs(t) do
       table.insert(arr, {key = k, value = v})
@@ -37,20 +37,33 @@ local function is_array(t)
 end
 
 local function merge_tables(t1, t2, overwrite) 
-   for k,v2 in pairs(t2) do
-       local v1 = t1[k]         
-       if type(v1) == 'table' and type(v2) == 'table' then
-           v1 = merge_tables(v1, v2)
-       elseif type(v1) == 'nil' then
-           t1[k] = v2
-       elseif overwrite then
-           t1[k] = v2 
-       end
+   local _result = {}
+   if is_array(t1) and is_array(t2) then 
+      for _, v in ipairs(t1) do 
+         table.insert(_result, v)
+      end
+      for _, v in ipairs(t2) do 
+         table.insert(_result, v)
+      end
+   else 
+      for k, v in pairs(t1) do 
+         _result[k] = v
+      end
+      for k, v2 in pairs(t2) do
+         local v1 = _result[k]         
+         if type(v1) == 'table' and type(v2) == 'table' then
+            _result[k] = merge_tables(v1, v2)
+         elseif type(v1) == 'nil' then
+            _result[k] = v2
+         elseif overwrite then
+            _result[k] = v2 
+         end
+      end
    end
-   return t1
+   return _result
 end
 
-function escape_magic_characters(s)
+local function _escape_magic_characters(s)
    return (s:gsub("[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%1"))
 end
 
@@ -101,7 +114,7 @@ end
 
 local function _global_log_factory(module, ...)
    local _result = {}
-   for i,v in ipairs({...}) do
+   for i, lvl in ipairs({...}) do
       if type(GLOBAL_LOGGER) ~= 'table' or GLOBAL_LOGGER.__type ~= 'ELI_LOGGER' then
          table.insert(_result, function() end)
       else
@@ -110,22 +123,39 @@ local function _global_log_factory(module, ...)
                 msg = { msg = msg }
             end
             msg.module = module
-            return GLOBAL_LOGGER:log(msg, v)
+            return GLOBAL_LOGGER:log(msg, lvl)
          end)
       end
    end
    return table.unpack(_result)
 end
 
+-- this is provides ability to load not packaged eli from cwd
+-- for debug purposes
+local function _remove_preloaded_lib()
+   for k,v in pairs(package.loaded) do
+      if k and k:match("eli%..*") then
+         package.loaded[k] = nil
+      end
+   end
+   for k,v in pairs(package.preload) do
+      if k and k:match("eli%..*") then
+         package.preload[k] = nil
+      end
+   end
+   print("eli.* packages unloeaded.")
+end
+
 return {
    keys = keys,
    values = values,
-   toArray = toArray,
+   to_array = _to_array,
    generate_safe_functions = generate_safe_functions,
    is_array = is_array,
-   escape_magic_characters = escape_magic_characters,
+   escape_magic_characters = _escape_magic_characters,
    filter_table = filter_table,
    merge_tables = merge_tables,
    print_table = print_table,
-   global_log_factory = _global_log_factory
+   global_log_factory = _global_log_factory,
+   remove_preloaded_lib = _remove_preloaded_lib
 }

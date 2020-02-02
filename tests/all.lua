@@ -6,6 +6,7 @@ require"fs"
 require"proc"
 require"env"
 require"zip"
+require"util"
 
 local _ntests, _nfailed = _test.result()
 _test.summary()

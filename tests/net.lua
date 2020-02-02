@@ -29,8 +29,8 @@ end
 
 _test["download_file"] = function ()
     local _expected = "a5bcc6d25b3393fc7a4e356af681561ab9fd558a2b220654b6e387b39e733388"
-    local _ok = _eliNet.safe_download_file("https://raw.githubusercontent.com/cryon-io/eli/master/LICENSE", "tmp/LICENSE")
-    _test.assert(_ok, _file)
+    local _ok, _error = _eliNet.safe_download_file("https://raw.githubusercontent.com/cryon-io/eli/master/LICENSE", "tmp/LICENSE")
+    _test.assert(_ok, _error)
     local _ok, _file = pcall(io.open, "tmp/LICENSE", "r")
     _test.assert(_ok, _file)
     local _ok, _s = pcall(_file.read, _file, "a")
