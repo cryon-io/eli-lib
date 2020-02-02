@@ -7,7 +7,6 @@ if not _ok then
         _test.assert(false, "eli.proc not available")
     end
     if not TEST then 
-        local _ntests, _nfailed = _test.result()
         _test.summary()
         os.exit()
     else 
@@ -31,7 +30,6 @@ end
 
 if not _eliProc.EPROC then
     if not TEST then 
-        local _ntests, _nfailed = _test.result()
         _test.summary()
         print"EPROC not detected, only basic tests executed..."
         os.exit()
@@ -62,6 +60,5 @@ _test["popen3"] = function ()
 end
 
 if not TEST then 
-    local _ntests, _nfailed = _test.result()
     _test.summary()
 end

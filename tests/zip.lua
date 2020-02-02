@@ -9,7 +9,6 @@ if not _ok then
         _test.assert(false, "eli.zip not available")
     end
     if not TEST then 
-        local _ntests, _nfailed = _test.result()
         _test.summary()
         os.exit()
     else 
@@ -53,6 +52,5 @@ _test["extract_string"] = function ()
 end
 
 if not TEST then 
-    local _ntests, _nfailed = _test.result()
     _test.summary()
 end

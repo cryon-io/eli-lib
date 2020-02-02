@@ -1,39 +1,60 @@
-string.split = function (s, pattern)
+local function _trim(s)
+    if type(s) ~= 'string' then return s end
+    return s:match "^()%s*$" and "" or s:match "^%s*(.*%S)"
+end
+
+local function _split(s, sep, trim)
+    if type(s) ~= 'string' then return s end
+    if sep == nil then
+        sep = "%s"
+    end
     local _result = {}
-    for word in s:gmatch(pattern) do table.insert(_result, word) end
-    return _result 
-end
-
--- joins only strings, ignoring other values
-string.join_strings = function(separator, ...)
-    local _result = ""
-    if type(separator) ~= 'string' then 
-        separator = ''
-    end
-    for i,v in pairs(table.pack(...)) do
-        -- we skip non strings
-        if type(v) == 'string' then
-            if #_result == 0 then 
-                _result = v
-            else 
-                _result = _result .. separator .. v
-            end
+    for str in string.gmatch(s, "([^" .. sep .. "]+)") do
+        if trim then 
+            str = _trim(str)
         end
+        table.insert(_result, str)
     end
-    local _result
+    return _result
 end
 
-string.join = function(separator, ...)
+local function _join(separator, ...)
     local _result = ""
-    if type(separator) ~= 'string' then 
-        separator = ''
+    if type(separator) ~= "string" then
+        separator = ""
     end
-    for i,v in pairs(table.pack(...)) do
-        if #_result == 0 then 
+    for i, v in ipairs(table.pack(...)) do
+        if #_result == 0 then
             _result = v
-        else 
+        else
             _result = _result .. separator .. v
         end
     end
-    local _result
+    return _result
 end
+
+-- joins only strings, ignoring other values
+local function _join_strings(separator, ...)
+    local _tmp = {}
+    for i, v in ipairs(table.pack(...)) do
+        if type(v) == "string" then
+            table.insert(_tmp, v)
+        end
+    end
+    return _join(separator, table.unpack(_tmp))
+end
+
+local function _globalize()
+    string.split = _split
+    string.join = _join
+    string.join_strings = _join_strings
+    string.trim = _trim
+end
+
+return {
+    globalize = _globalize,
+    split = _split,
+    join = _join,
+    join_strings = _join_strings,
+    trim = _trim
+}

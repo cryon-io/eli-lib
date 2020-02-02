@@ -7,7 +7,6 @@ if not _ok then
         _test.assert(false, "eli.fs not available")
     end
     if not TEST then 
-        local _ntests, _nfailed = _test.result()
         _test.summary()
         os.exit()
     else 
@@ -101,7 +100,6 @@ end
 
 if not _eliFs.EFS then
     if not TEST then 
-        local _ntests, _nfailed = _test.result()
         _test.summary()
         print"EFS not detected, only basic tests executed..."
         os.exit()
@@ -167,6 +165,5 @@ _test["lock_dir & unlock_dir"] = function ()
 end
 
 if not TEST then 
-    local _ntests, _nfailed = _test.result()
     _test.summary()
 end

@@ -7,7 +7,6 @@ if not _ok then
         _test.assert(false, "eli.env not available")
     end
     if not TEST then 
-        local _ntests, _nfailed = _test.result()
         _test.summary()
         os.exit()
     else 
@@ -26,7 +25,6 @@ end
 
 if not _eliEnv.EENV then
     if not TEST then 
-        local _ntests, _nfailed = _test.result()
         _test.summary()
         print"EENV not detected, only basic tests executed..."
         os.exit()
@@ -49,6 +47,5 @@ _test["environment"] = function ()
 end
 
 if not TEST then 
-    local _ntests, _nfailed = _test.result()
     _test.summary()
 end

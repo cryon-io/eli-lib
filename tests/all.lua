@@ -8,5 +8,7 @@ require"env"
 require"zip"
 require"util"
 
+require"extensions.string"
+
 local _ntests, _nfailed = _test.result()
 _test.summary()

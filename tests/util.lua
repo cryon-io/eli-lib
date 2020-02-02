@@ -7,7 +7,6 @@ if not _ok then
         _test.assert(false, "eli.util not available")
     end
     if not TEST then 
-        local _ntests, _nfailed = _test.result()
         _test.summary()
         os.exit()
     else 
@@ -153,6 +152,5 @@ _test["global_log_factory (GLOBAL_LOGGER == 'ELI_LOGGER')"] = function ()
 end
 
 if not TEST then 
-    local _ntests, _nfailed = _test.result()
     _test.summary()
 end
