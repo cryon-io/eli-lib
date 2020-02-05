@@ -47,7 +47,7 @@ local function merge_tables(t1, t2, overwrite)
             for i = 1, #t2, 1 do
                local v2 = t2[i]
                if type(v2.id) == "string" and v2.id == v.id then
-                  v = merge_tables(v, v2)
+                  v = merge_tables(v, v2, overwrite)
                   table.remove(t2, i)
                   i = i - 1
                   break
@@ -165,7 +165,7 @@ local function _remove_preloaded_lib()
          package.preload[k] = nil
       end
    end
-   print("eli.* packages unloeaded.")
+   print("eli.* packages unloaded.")
 end
 
 return {
