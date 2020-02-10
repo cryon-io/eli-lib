@@ -17,11 +17,16 @@ local function download_file(url, destination, options)
    end
    
    local f = io.open(destination, "w+b")
-   curl.easy {
+   local _easy = curl.easy {
       url = url,
       writefunction = f
-   }:setopt_followlocation(followRedirects):setopt_ssl_verifypeer(verifyPeer):perform():close()
+   }
    f:close()
+   
+   _easy:setopt_followlocation(followRedirects):setopt_ssl_verifypeer(verifyPeer):perform()
+   local code = _easy:getinfo(curl.INFO_RESPONSE_CODE)
+   _easy:close()
+   return code
 end
 
 local function download_string(url, options) 
@@ -43,11 +48,15 @@ local function download_string(url, options)
    local function append(data) 
       result = result .. data
    end
-   curl.easy {
+   local _easy = curl.easy {
       url = url,
       writefunction = append
-   }:setopt_followlocation(followRedirects):setopt_ssl_verifypeer(verifyPeer):perform():close()
-   return result
+   }
+
+   _easy:setopt_followlocation(followRedirects):setopt_ssl_verifypeer(verifyPeer):perform()
+   local code = _easy:getinfo(curl.INFO_RESPONSE_CODE)
+   _easy:close()
+   return code, result
 end
 
 
