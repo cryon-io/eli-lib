@@ -80,6 +80,9 @@ local function merge_tables(t1, t2, overwrite)
 end
 
 local function _escape_magic_characters(s)
+   if type(s) ~= 'string' then
+      return
+   end
    return (s:gsub("[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%1"))
 end
 

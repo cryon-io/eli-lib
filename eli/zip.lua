@@ -10,10 +10,12 @@ local function get_root_dir(zipArch)
    -- check whether we have all files in same dir
    local stat = zipArch:stat(1)
    local rootDir = stat.name:match("^.-/")
-   for i = 2, #zipArch do
-      stat = zipArch:stat(i)
-      if not stat.name:match("^" .. escape_magic_characters(rootDir)) then
-         return ""
+   if rootDir then
+      for i = 2, #zipArch do
+         stat = zipArch:stat(i)
+         if not stat.name:match("^" .. escape_magic_characters(rootDir)) then
+            return ""
+         end
       end
    end
    return rootDir or ""
@@ -31,10 +33,14 @@ local function extract(source, destination, options)
    local transform_path = nil
    local filter = nil
    local _externalChmod = false
+   local _openFlags = zip.CHECKCONS
    if type(options) == "table" then
       flattenRootDir = options.flattenRootDir
       transform_path = options.transform_path
       filter = options.filter
+      if type(options.openFlags) == "number" then
+         _openFlags = options.openFlags
+      end
       if type(options.mkdirp) == "function" then
          mkdirp = options.mkdirp
       end
@@ -46,7 +52,7 @@ local function extract(source, destination, options)
       flattenRootDir = options
    end
 
-   local zipArch, err = zip.open(source, zip.CHECKCONS)
+   local zipArch, err = zip.open(source, _openFlags)
    assert(zipArch ~= nil, err)
 
    local ignorePath = ""
@@ -130,9 +136,13 @@ local function extract_file(source, file, destination, options)
    local flattenRootDir = false
    local transform_path = nil
    local _externalChmod = false
+   local _openFlags = zip.CHECKCONS
    if type(options) == "table" then
       flattenRootDir = options.flattenRootDir
       transform_path = options.transform_path
+      if type(options.openFlags) == "number" then
+         _openFlags = options.openFlags
+      end
       if type(options.mkdirp) == "function" then
          mkdirp = options.mkdirp
       end
@@ -144,7 +154,7 @@ local function extract_file(source, file, destination, options)
       flattenRootDir = options
    end
 
-   local zipArch, err = zip.open(source, zip.CHECKCONS)
+   local zipArch, err = zip.open(source, _openFlags)
    assert(zipArch ~= nil, err)
 
    local ignorePath = ""
@@ -205,13 +215,17 @@ end
 
 local function extract_string(source, file, options)
    local flattenRootDir = false
+   local _openFlags = zip.CHECKCONS
    if type(options) == "table" then
       flattenRootDir = options.flattenRootDir
+      if type(options.openFlags) == "number" then
+         _openFlags = options.openFlags
+      end
    elseif type(options) == "boolean" then
       flattenRootDir = options
    end
 
-   local zipArch, err = zip.open(source, zip.CHECKCONS)
+   local zipArch, err = zip.open(source, _openFlags)
    assert(zipArch ~= nil, err)
 
    local ignorePath = ""
@@ -245,14 +259,18 @@ end
 local function get_files(source, options)
    local flattenRootDir = false
    local transform_path = nil
+   local _openFlags = zip.CHECKCONS
    if type(options) == "table" then
       flattenRootDir = options.flattenRootDir
       transform_path = options.transform_path
+      if type(options.openFlags) == "number" then
+         _openFlags = options.openFlags
+      end
    elseif type(options) == "boolean" then
       flattenRootDir = options
    end
 
-   local zipArch, err = zip.open(source, zip.CHECKCONS)
+   local zipArch, err = zip.open(source, _openFlags)
    assert(zipArch ~= nil, err)
 
    local ignorePath = ""
