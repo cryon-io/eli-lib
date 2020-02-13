@@ -1,7 +1,8 @@
 local io = require "io"
-local dir = require "eli.path".dir
-local combine = require "eli.path".combine
-local util = require"eli.util"
+local _eliPath = require "eli.path"
+local dir = _eliPath.dir
+local combine = _eliPath.combine
+local util = require "eli.util"
 local generate_safe_functions = util.generate_safe_functions
 local merge_tables = util.merge_tables
 local efsLoaded, efs = pcall(require, "eli.fs.extra")
@@ -60,7 +61,7 @@ local function _remove(dst, recurse)
       os.remove(dst)
       return
    end
-   
+
    if efs.file_type(dst) == nil then
       return
    end
@@ -134,6 +135,41 @@ local function hash_file(src, options)
    end
 end
 
+local function _direntry_type(entry)
+   if type(entry) == "string" then
+      return efs.file_type(entry)
+   elseif type(entry) == "userdata" and entry.__type == "ELI_DIRENTRY" then
+      return entry:type()
+   end
+   return nil
+end
+
+local function _read_dir_recurse(path, withFileTypes)
+   local _entries = efs.read_dir(path, withFileTypes)
+   local result = {}
+   for _, entry in ipairs(_entries) do
+      local _path = withFileTypes and entry:fullpath() or combine(path, entry)
+      if _direntry_type(entry) == "directory" then
+         local _subEntries = _read_dir_recurse(_path, withFileTypes)
+         for _, subEntry in ipairs(_subEntries) do
+            table.insert(result, subEntry)
+         end
+      end
+      table.insert(result, withFileTypes and entry or _path)
+   end
+   return result
+end
+
+local function _read_dir(path, options)
+   if type(options) ~= "table" then
+      options = {}
+   end
+   if options.recurse then
+      return _read_dir_recurse(path, options.withFileTypes)
+   end
+   return efs.read_dir(path, options.withFileTypes)
+end
+
 local fs = {
    write_file = write_file,
    read_file = read_file,
@@ -144,13 +180,14 @@ local fs = {
    exists = exists,
    move = move,
    EFS = efsLoaded,
-   hash_file = hash_file
+   hash_file = hash_file,
+   read_dir = _read_dir
 }
 
-if efsLoaded then 
+if efsLoaded then
    local result = generate_safe_functions(merge_tables(fs, efs))
    result.safe_iter_dir = nil -- not supported
    return result
-else 
+else
    return generate_safe_functions(fs)
 end

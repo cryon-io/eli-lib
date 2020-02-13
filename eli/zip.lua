@@ -298,11 +298,82 @@ local function get_files(source, options)
    return files
 end
 
+-- content is either file path or string
+local function _add_to_archive(archive, path, type, content)
+   if type == 'directory' then
+      archive:add_dir(path)
+   elseif type == 'file' then
+      archive:add(path, "file", content)
+   elseif type == 'string' then
+      archive:add(path, "string", content)
+   else 
+      error("Unsupported data type for compression...")
+   end
+end
+
+local function _open_archive(path, checkcons) 
+   local _result, _error
+   if checkcons then 
+      _result, _error = zip.open(path, zip.CHECKCONS)
+   else 
+      _result, _error =  zip.open(path)
+   end
+   assert(_result, _error)
+end
+
+local function _new_archive(path)
+   local _result, _error = zip.open(path, zip.OR(zip.CREATE, zip.EXCL))
+   assert(_result, _error)
+   return _result
+end
+
+local function _compress(source, target, options)
+   if type(options) ~= 'table' then
+      options = {}
+   end
+
+   if fs.file_type(source) == nil then
+      error("Cannot compress. Invalid source " .. (source or ""))
+   end
+
+   if options.overwrite then 
+      local _targetType = fs.file_type(target)
+      if _targetType == 'file' then 
+         fs.remove(target)
+      elseif _targetType ~= nil then -- exists but not file
+         error("Can not overwrite! Target is not a file. (" .. (_targetType or "unknown type") .. ")")
+      end
+   end
+
+   local _skipLength = 1 -- dont skip anything
+   if not options.preserveFullPath then
+      local _targetName = path.file(source)
+      _skipLength = #source - #_targetName + 1
+   end
+
+   local _archive = _new_archive(target);
+   if fs.file_type(source) == "file" then
+      _add_to_archive(_archive, source:sub(_skipLength), "file", source)
+      _archive:close()
+      return
+   end
+
+   local _dirEntries = fs.read_dir(source, { recurse = options.recurse, withFileTypes = true })
+   for _, entry in ipairs(_dirEntries) do 
+      _add_to_archive(_archive, entry:fullpath():sub(_skipLength), entry:type(), entry:fullpath())
+   end
+   _archive:close()
+end
+
 return generate_safe_functions(
    {
       extract = extract,
       extract_file = extract_file,
       extract_string = extract_string,
-      get_files = get_files
+      get_files = get_files,
+      compress = _compress,
+      add_to_archive = _add_to_archive,
+      new_archive = _new_archive,
+      open_archive = _open_archive
    }
 )
