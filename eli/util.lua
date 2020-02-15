@@ -37,8 +37,12 @@ local function is_array(t)
 end
 
 local function merge_tables(t1, t2, overwrite)
-   if t1 == nil then return t2 end
-   if t2 == nil then return t1 end
+   if t1 == nil then
+      return t2
+   end
+   if t2 == nil then
+      return t1
+   end
    local _result = {}
    if is_array(t1) and is_array(t2) then
       for _, v in ipairs(t1) do
@@ -80,7 +84,7 @@ local function merge_tables(t1, t2, overwrite)
 end
 
 local function _escape_magic_characters(s)
-   if type(s) ~= 'string' then
+   if type(s) ~= "string" then
       return
    end
    return (s:gsub("[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%1"))
@@ -171,6 +175,60 @@ local function _remove_preloaded_lib()
    print("eli.* packages unloaded.")
 end
 
+local function _random_string(length, charset)
+   if type(charset) ~= "table" then
+      charset = {}
+      for c = 48, 57 do
+         table.insert(charset, string.char(c))
+      end
+      for c = 65, 90 do
+         table.insert(charset, string.char(c))
+      end
+      for c = 97, 122 do
+         table.insert(charset, string.char(c))
+      end
+   end
+   if not length or length <= 0 then
+      return ""
+   end
+   math.randomseed(os.time())
+   return randomString(length - 1) .. charset[math.random(1, #charset)]
+end
+
+--If the semver string a is greater than b, return 1. If the semver string b is greater than a,
+-- return -1. If a equals b, return 0;
+local function _compare_version(v1, v2)
+   if type(v1) == "string" and type(v2) == "string" then
+      local _v1parts = {}
+      for p in string.gmatch(v1, "[^%.]+") do
+         if pcall(tonumber, p) then
+            table.insert(_v1parts, p)
+         end
+      end
+
+      local _v2parts = {}
+      for p in string.gmatch(v2, "[^%.]+") do
+         if pcall(tonumber, p) then
+            table.insert(_v2parts, p)
+         end
+      end
+      for i, v in ipairs(_v1parts) do
+         if _v2parts[i] == nil or v > _v2parts[i] then
+            return 1
+         elseif v < _v2parts[i] then
+            return -1
+         end
+      end
+   elseif type(v1) == "number" and type(v2) == "number" then
+      if v1 > v2 then
+         return 1
+      elseif v1 < v2 then
+         return -1
+      end
+   end
+   return 0
+end
+
 return {
    keys = keys,
    values = values,
@@ -182,5 +240,7 @@ return {
    merge_tables = merge_tables,
    print_table = print_table,
    global_log_factory = _global_log_factory,
-   remove_preloaded_lib = _remove_preloaded_lib
+   remove_preloaded_lib = _remove_preloaded_lib,
+   random_string = _random_string,
+   compare_version = _compare_version
 }

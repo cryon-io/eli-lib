@@ -149,7 +149,7 @@ local function _read_dir_recurse(path, withFileTypes)
    local result = {}
    for _, entry in ipairs(_entries) do
       local _path = withFileTypes and entry:fullpath() or combine(path, entry)
-      if _direntry_type(entry) == "directory" then
+      if _direntry_type(withFileTypes and entry or _path) == "directory" then
          local _subEntries = _read_dir_recurse(_path, withFileTypes)
          for _, subEntry in ipairs(_subEntries) do
             table.insert(result, subEntry)
