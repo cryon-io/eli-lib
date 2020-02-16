@@ -144,18 +144,18 @@ local function _direntry_type(entry)
    return nil
 end
 
-local function _read_dir_recurse(path, withFileTypes)
-   local _entries = efs.read_dir(path, withFileTypes)
+local function _read_dir_recurse(path, asDirEntries)
+   local _entries = efs.read_dir(path, asDirEntries)
    local result = {}
    for _, entry in ipairs(_entries) do
-      local _path = withFileTypes and entry:fullpath() or combine(path, entry)
-      if _direntry_type(withFileTypes and entry or _path) == "directory" then
-         local _subEntries = _read_dir_recurse(_path, withFileTypes)
+      local _path = asDirEntries and entry:fullpath() or combine(path, entry)
+      if _direntry_type(asDirEntries and entry or _path) == "directory" then
+         local _subEntries = _read_dir_recurse(_path, asDirEntries)
          for _, subEntry in ipairs(_subEntries) do
             table.insert(result, subEntry)
          end
       end
-      table.insert(result, withFileTypes and entry or _path)
+      table.insert(result, asDirEntries and entry or _path)
    end
    return result
 end
@@ -165,9 +165,9 @@ local function _read_dir(path, options)
       options = {}
    end
    if options.recurse then
-      return _read_dir_recurse(path, options.withFileTypes)
+      return _read_dir_recurse(path, options.asDirEntries)
    end
-   return efs.read_dir(path, options.withFileTypes)
+   return efs.read_dir(path, options.asDirEntries)
 end
 
 local fs = {

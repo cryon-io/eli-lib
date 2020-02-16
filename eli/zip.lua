@@ -358,7 +358,7 @@ local function _compress(source, target, options)
       return
    end
 
-   local _dirEntries = fs.read_dir(source, { recurse = options.recurse, withFileTypes = true })
+   local _dirEntries = fs.read_dir(source, { recurse = options.recurse, asDirEntries = true })
    for _, entry in ipairs(_dirEntries) do 
       _add_to_archive(_archive, entry:fullpath():sub(_skipLength), entry:type(), entry:fullpath())
    end

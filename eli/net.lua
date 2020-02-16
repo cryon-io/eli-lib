@@ -21,11 +21,11 @@ local function download_file(url, destination, options)
       url = url,
       writefunction = f
    }
-   f:close()
    
    _easy:setopt_followlocation(followRedirects):setopt_ssl_verifypeer(verifyPeer):perform()
    local code = _easy:getinfo(curl.INFO_RESPONSE_CODE)
    _easy:close()
+   f:close()
    return code
 end
 
