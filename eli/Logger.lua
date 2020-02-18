@@ -112,7 +112,7 @@ end
 
 local function log_json(data)
     data.timestamp = os.time(os.date("!*t"))
-    print(encode_to_json(data, false, true))
+    print(encode_to_json(data, {indent = false, skipkeys = true}))
 end
 
 local function wrap_msg(msg)
