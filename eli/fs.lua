@@ -44,6 +44,8 @@ local function copy_file(src, dst)
       end
       dstf:write(block)
    end
+   srcf:close()
+   dstf:close()
 end
 
 local function mkdirp(dst)
