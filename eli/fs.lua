@@ -60,16 +60,14 @@ end
 local function _remove(dst, recurse)
    if not efsLoaded then
       -- fallback to os delete
-      os.remove(dst)
-      return
+      return os.remove(dst)
    end
 
    if efs.file_type(dst) == nil then
-      return
+      return true
    end
    if efs.file_type(dst) == "file" then
-      os.remove(dst)
-      return
+      return os.remove(dst)
    end
    if recurse then
       for o in efs.iter_dir(dst) do
@@ -84,6 +82,7 @@ local function _remove(dst, recurse)
       end
    end
    efs.rmdir(dst)
+   return true
 end
 
 local function move(src, dst)

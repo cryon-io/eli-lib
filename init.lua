@@ -43,14 +43,14 @@ local function eli_init()
    if i_min == -1 then -- we are running without script (interactive mode)
       APP_ROOT = nil
    else
-      if proc.EPROC then
+      if proc.EPROC and not path.isabs(arg[0]) then
          APP_ROOT_SCRIPT = path.abs(arg[0], proc.cwd())
       else
          APP_ROOT_SCRIPT = arg[0]
       end
       APP_ROOT = path.dir(APP_ROOT_SCRIPT)
    end
-   ELI_LIB_VERSION = "0.5.0"
+   ELI_LIB_VERSION = "0.5.1"
 end
 
 eli_init()
