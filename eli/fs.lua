@@ -60,21 +60,24 @@ end
 local function _remove(dst, recurse)
    if not efsLoaded then
       -- fallback to os delete
-      return os.remove(dst)
+      local _ok, _error = os.remove(dst)
+      assert(_ok, _error or "")
    end
 
    if efs.file_type(dst) == nil then
-      return true
+      return
    end
    if efs.file_type(dst) == "file" then
-      return os.remove(dst)
+      local _ok, _error = os.remove(dst)
+      assert(_ok, _error or "")
    end
    if recurse then
       for o in efs.iter_dir(dst) do
          local fullPath = combine(dst, o)
          if o ~= "." and o ~= ".." then
             if efs.file_type(fullPath) == "file" then
-               os.remove(fullPath)
+               local _ok, _error = os.remove(fullPath)
+               assert(_ok, _error or "")
             elseif efs.file_type(fullPath) == "directory" then
                _remove(fullPath, recurse)
             end
@@ -82,7 +85,6 @@ local function _remove(dst, recurse)
       end
    end
    efs.rmdir(dst)
-   return true
 end
 
 local function move(src, dst)

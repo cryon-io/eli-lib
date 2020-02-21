@@ -192,7 +192,7 @@ local function _random_string(length, charset)
       return ""
    end
    math.randomseed(os.time())
-   return randomString(length - 1) .. charset[math.random(1, #charset)]
+   return _random_string(length - 1) .. charset[math.random(1, #charset)]
 end
 
 --If the semver string a is greater than b, return 1. If the semver string b is greater than a,
