@@ -147,18 +147,21 @@ local function _direntry_type(entry)
    return nil
 end
 
-local function _read_dir_recurse(path, asDirEntries)
+local function _read_dir_recurse(path, asDirEntries, lenOfPathToRemove)
+   if type(_lenOfPathToRemove) ~= 'number' then 
+      _lenOfPathToRemove = 0
+   end 
    local _entries = efs.read_dir(path, asDirEntries)
    local result = {}
    for _, entry in ipairs(_entries) do
       local _path = asDirEntries and entry:fullpath() or combine(path, entry)
       if _direntry_type(asDirEntries and entry or _path) == "directory" then
-         local _subEntries = _read_dir_recurse(_path, asDirEntries)
+         local _subEntries = _read_dir_recurse(_path, asDirEntries, lenOfPathToRemove)
          for _, subEntry in ipairs(_subEntries) do
             table.insert(result, subEntry)
          end
       end
-      table.insert(result, asDirEntries and entry or _path)
+      table.insert(result, asDirEntries and entry or _path:sub(lenOfPathToRemove + 1))
    end
    return result
 end
@@ -168,9 +171,19 @@ local function _read_dir(path, options)
       options = {}
    end
    if options.recurse then
-      return _read_dir_recurse(path, options.asDirEntries)
+      local _lenOfPathToRemove = path:match(".*/") and #path or #path + 1
+      if options.returnFullPaths then 
+         _lenOfPathToRemove = 0
+      end
+      return _read_dir_recurse(path, options.asDirEntries, _lenOfPathToRemove)
    end
-   return efs.read_dir(path, options.asDirEntries)
+   local _result = efs.read_dir(path, options.asDirEntries)
+   if not options.asDirEntries and options.returnFullPaths then 
+      for i, v in ipairs(_result) do 
+         _result[i] = combine(path, v)
+      end
+   end
+   return _result
 end
 
 local fs = {
