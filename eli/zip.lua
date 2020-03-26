@@ -5,17 +5,35 @@ local separator = require "eli.path".default_sep()
 local util = require "eli.util"
 local generate_safe_functions = util.generate_safe_functions
 local escape_magic_characters = util.escape_magic_characters
+local _join = require"eli.extensions.string".join
 
 local function get_root_dir(zipArch)
    -- check whether we have all files in same dir
    local stat = zipArch:stat(1)
+   
    local rootDir = stat.name:match("^.-/")
+      
    if rootDir then
+      local _segments = {}
+      for segment in string.gmatch(stat.name, "(.-)/") do 
+         table.insert(_segments, segment)
+      end
+
       for i = 2, #zipArch do
          stat = zipArch:stat(i)
-         if not stat.name:match("^" .. escape_magic_characters(rootDir)) then
-            return ""
+
+         local j = 1
+         for segment in string.gmatch(stat.name, "(.-)/") do 
+            if segment ~= _segments[j] then 
+               local _tmp = {}
+               _segments = table.move(_segments, 1, j - 1, 1, _tmp)
+               break
+            end
          end
+      end
+
+      if #_segments > 0 then 
+         rootDir = _join('/', table.unpack(_segments))
       end
    end
    return rootDir or ""
