@@ -26,6 +26,9 @@ local function download_file(url, destination, options)
    local code = _easy:getinfo(curl.INFO_RESPONSE_CODE)
    _easy:close()
    f:close()
+   if code ~= 200 and not options.ignoreHttpErrors then 
+      error(code)
+   end
    return code
 end
 
@@ -56,9 +59,11 @@ local function download_string(url, options)
    _easy:setopt_followlocation(followRedirects):setopt_ssl_verifypeer(verifyPeer):perform()
    local code = _easy:getinfo(curl.INFO_RESPONSE_CODE)
    _easy:close()
-   return code, result
+   if code ~= 200 and not options.ignoreHttpErrors then 
+      error(code)
+   end
+   return result, code
 end
-
 
 return generate_safe_functions(
    {
