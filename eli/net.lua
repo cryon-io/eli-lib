@@ -1,68 +1,80 @@
-local curlLoaded, curl = pcall(require, "cURL") -- "lcurl.safe"
+local fetchLoaded, _fetch = pcall(require, "lfetch") -- "lcurl.safe"
 local io = require "io"
 local generate_safe_functions = require "eli.util".generate_safe_functions
 
-assert(curlLoaded, "eli.net requires cURL")
-
 local function download_file(url, destination, options)
-   if not curlLoaded then
+   if not fetchLoaded then
       error("Networking not available!")
    end
-
-   local followRedirects = false
-   local verifyPeer = true
-   if type(options) == "table" then
-      followRedirects = options.followRedirects or followRedirects
-      verifyPeer = options.verify_peer or verifyPeer
-   end
    
-   local f = io.open(destination, "w+b")
-   local _easy = curl.easy {
-      url = url,
-      writefunction = f
-   }
-   
-   _easy:setopt_followlocation(followRedirects):setopt_ssl_verifypeer(verifyPeer):perform()
-   local code = _easy:getinfo(curl.INFO_RESPONSE_CODE)
-   _easy:close()
-   f:close()
-   if code ~= 200 and not options.ignoreHttpErrors then 
-      error(code)
-   end
-   return code
-end
-
-local function download_string(url, options) 
-   if not curlLoaded then
-      error("Networking not available!")
-   end
-
-   local followRedirects = false
-   local verifyPeer = true
+   local flags = ""
    if type(options) == "table" then
-      followRedirects = options.followRedirects or followRedirects
-      verifyPeer = options.verify_peer
-      if verifyPeer == nil then 
-         verifyPeer = true
+      if options.verbose then 
+         flags = flags .. "v"
+      end
+      if type(options.verifyPeer) == 'boolean' and not options.verifyPeer then 
+         flags = flags .. "p"
+      end
+      if type(options.additionalFlags) == 'string' then 
+         flags = flags .. additionalFlags
       end
    end
    
-   local result = ""
-   local function append(data) 
-      result = result .. data
+   local _df = io.open(destination, "w+b")
+   _fetchIO, _error = _fetch.get(url, flags)
+   if type(_fetchIO) == "nil" then 
+      error(_error)
    end
-   local _easy = curl.easy {
-      url = url,
-      writefunction = append
-   }
 
-   _easy:setopt_followlocation(followRedirects):setopt_ssl_verifypeer(verifyPeer):perform()
-   local code = _easy:getinfo(curl.INFO_RESPONSE_CODE)
-   _easy:close()
-   if code ~= 200 and not options.ignoreHttpErrors then 
-      error(code)
+   while true do 
+      local _chunk, _error = _fetchIO:read(1024)
+      if type(_chunk) == "nil" then 
+         error(_error)
+      end
+      if #_chunk == 0 then 
+          break
+      end
+      _df:write(_chunk)
    end
-   return result, code
+end
+
+local function download_string(url, options) 
+   if not fetchLoaded then
+      error("Networking not available!")
+   end
+
+   local flags = ""
+   if type(options) == "table" then
+      if options.verbose then 
+         flags = flags .. "v"
+      end
+      if type(options.verifyPeer) == 'boolean' and not options.verifyPeer then 
+         flags = flags .. "p"
+      end
+      if type(options.additionalFlags) == 'string' then 
+         flags = flags .. additionalFlags
+      end
+   end
+
+   local result = ""
+
+   _fetchIO, _error = _fetch.get(url, flags)
+   if type(_fetchIO) == "nil" then 
+      error(_error)
+   end
+
+   while true do 
+      local _chunk, _error = _fetchIO:read(1024)
+      if type(_chunk) == "nil" then 
+         error(_error)
+      end
+      if #_chunk == 0 then 
+          break
+      end
+      result = result .. _chunk
+   end
+
+   return result
 end
 
 return generate_safe_functions(

@@ -20,8 +20,7 @@ end
 
 _test["download_string"] = function ()
     local _expected = "a5bcc6d25b3393fc7a4e356af681561ab9fd558a2b220654b6e387b39e733388"
-    local _ok, _code, _s = _eliNet.safe_download_string("https://raw.githubusercontent.com/cryon-io/eli/master/LICENSE")
-    _test.assert(_ok and _code == 200, _s)
+    local _ok, _s = _eliNet.safe_download_string("https://raw.githubusercontent.com/cryon-io/eli/master/LICENSE")
     local _result = _sha256sum(_s, true)
     _test.assert(_expected == _result, "hashes do not match")
 end
