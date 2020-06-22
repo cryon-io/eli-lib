@@ -11,9 +11,10 @@ local function get_root_dir(zipArch)
    -- check whether we have all files in same dir
    local stat = zipArch:stat(1)
    
-   local rootDir = stat.name:match("^.-/")
-      
-   if rootDir then
+   local rootDirCandidate = stat.name:match("^.-/")
+   local rootDir = nil 
+
+   if rootDirCandidate then
       local _segments = {}
       for segment in string.gmatch(stat.name, "(.-)/") do 
          table.insert(_segments, segment)
@@ -23,6 +24,9 @@ local function get_root_dir(zipArch)
          stat = zipArch:stat(i)
 
          local j = 1
+         if not string.find(stat.name, "(.-)/") then 
+            return "" -- found file in root, no usable root dir
+         end
          for segment in string.gmatch(stat.name, "(.-)/") do 
             if segment ~= _segments[j] then 
                local _tmp = {}

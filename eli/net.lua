@@ -36,6 +36,7 @@ local function download_file(url, destination, options)
       end
       _df:write(_chunk)
    end
+   _df:close()
 end
 
 local function download_string(url, options) 
