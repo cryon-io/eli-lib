@@ -20,8 +20,12 @@ local function download_file(url, destination, options)
       end
    end
    
-   local _df = io.open(destination, "w+b")
-   _fetchIO, _error = _fetch.get(url, flags)
+   local _didOpenFile, _df = pcall(io.open, destination, "w+b")
+   if not _didOpenFile then
+      error(_df)
+   end
+
+   local _fetchIO, _error = _fetch.get(url, flags)
    if type(_fetchIO) == "nil" then 
       error(_error)
    end
