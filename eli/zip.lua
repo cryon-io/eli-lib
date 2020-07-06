@@ -10,13 +10,13 @@ local _join = require"eli.extensions.string".join
 local function get_root_dir(zipArch)
    -- check whether we have all files in same dir
    local stat = zipArch:stat(1)
-   
-   local rootDirCandidate = stat.name:match("^.-/")
+
+   local rootDirCandidate = stat.name:match("^.-" .. separator)
    local rootDir = nil 
 
    if rootDirCandidate then
       local _segments = {}
-      for segment in string.gmatch(stat.name, "(.-)/") do 
+      for segment in string.gmatch(stat.name, "(.-)" .. separator) do 
          table.insert(_segments, segment)
       end
 
@@ -24,15 +24,16 @@ local function get_root_dir(zipArch)
          stat = zipArch:stat(i)
 
          local j = 1
-         if not string.find(stat.name, "(.-)/") then 
+         if not string.find(stat.name, "(.-)" .. separator) then 
             return "" -- found file in root, no usable root dir
          end
-         for segment in string.gmatch(stat.name, "(.-)/") do 
+         for segment in string.gmatch(stat.name, "(.-)" .. separator) do 
             if segment ~= _segments[j] then 
                local _tmp = {}
                _segments = table.move(_segments, 1, j - 1, 1, _tmp)
                break
             end
+            j = j + 1
          end
       end
 
@@ -40,6 +41,11 @@ local function get_root_dir(zipArch)
          rootDir = _join('/', table.unpack(_segments))
       end
    end
+
+   if type(rootDir) == 'string' and #rootDir > 0 and rootDir[#rootDir] ~= separator then
+      rootDir = rootDir .. separator
+   end
+
    return rootDir or ""
 end
 
