@@ -16,6 +16,8 @@ local function _parse_args(args)
             else -- command or parameter
                 table.insert(_argList, {type = "parameter", value = _arg, id = _arg, arg = _arg})
             end
+        elseif type(_arg) == 'table' then -- passthrough pre processed args
+            table.insert(_argList, _arg)
         end
     end
     return _argList
