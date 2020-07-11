@@ -37,6 +37,13 @@ _test["download_file"] = function ()
     _test.assert(_expected == _result, "hashes do not match")
 end
 
+_test["download_timeout"] = function ()
+    _eliNet.safe_set_tls_timeout(1)
+    local _ok, _s = _eliNet.safe_download_string("https://raw.githubusercontent.com/cryon-io/eli/master/LICENSE")
+    _eliNet.safe_set_tls_timeout(0)
+    _test.assert(not _ok, "should fail")
+end
+
 if not TEST then 
     _test.summary()
 end
