@@ -186,6 +186,23 @@ local function _read_dir(path, options)
    return _result
 end
 
+local function _chown(path, uid, gid, options)
+   if type(options) ~= "table" then
+      options = {}
+   end
+
+   if not options.recurse or efs.file_type(path) ~= "directory" then
+      return efs.chown(path, uid, gid)
+   end
+
+   efs.chown(path, uid, gid)
+
+   _paths = _read_dir(path, {recurse = true, returnFullPaths = true})
+   for _, _path in ipairs(_paths) do
+      efs.chown(_path, uid, gid)
+   end
+end
+
 local fs = {
    write_file = write_file,
    read_file = read_file,
@@ -197,7 +214,8 @@ local fs = {
    move = move,
    EFS = efsLoaded,
    hash_file = hash_file,
-   read_dir = _read_dir
+   read_dir = _read_dir,
+   chown = _chown
 }
 
 if efsLoaded then
