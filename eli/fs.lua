@@ -57,12 +57,20 @@ local function mkdirp(dst)
    efs.mkdir(dst)
 end
 
-local function _remove(dst, recurse)
+local function _remove(dst, options)
    if not efsLoaded then
       -- fallback to os delete
       local _ok, _error = os.remove(dst)
       assert(_ok, _error or "")
    end
+
+   if type(options) ~= "table" then 
+      options = {}
+   end
+
+   local recurse = options.recurse
+   local contentOnly = options.contentOnly
+   options.contentOnly = false -- for recursive calls
 
    if efs.file_type(dst) == nil then
       return
@@ -79,12 +87,14 @@ local function _remove(dst, recurse)
                local _ok, _error = os.remove(fullPath)
                assert(_ok, _error or "")
             elseif efs.file_type(fullPath) == "directory" then
-               _remove(fullPath, recurse)
+               _remove(fullPath, options)
             end
          end
       end
    end
-   efs.rmdir(dst)
+   if not contentOnly then 
+      efs.rmdir(dst)
+   end
 end
 
 local function move(src, dst)

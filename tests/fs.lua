@@ -92,9 +92,22 @@ _test["move (dir)"] = function ()
 end
 
 _test["remove (recurse)"] = function ()
-    local _ok, _error = _eliFs.safe_remove("tmp/test-dir", true)
+    local _ok, _error = _eliFs.safe_remove("tmp/test-dir", { recurse = true })
     _test.assert(_ok, _error)
     local _ok, _exists = _eliFs.safe_exists("tmp/test-dir")
+    _test.assert(_ok and not _exists, _exists)
+end
+
+_test["remove (contentOnly)"] = function ()
+    local _ok, _error = _eliFs.safe_mkdir("tmp/test-dir")
+    _test.assert(_ok, _error)
+    local _ok, _error = _eliFs.safe_copy_file("test.file", "tmp/test-dir/test.file")
+    _test.assert(_ok, _error)
+    local _ok, _error = _eliFs.safe_remove("tmp/test-dir", { contentOnly = true, recurse = true })
+    _test.assert(_ok, _error)
+    local _ok, _exists = _eliFs.safe_exists("tmp/test-dir")
+    _test.assert(_ok and _exists, _exists)
+    local _ok, _exists = _eliFs.safe_exists("tmp/test-dir/test.file")
     _test.assert(_ok and not _exists, _exists)
 end
 
