@@ -16,8 +16,12 @@ end
 
 local function _to_array(t)
    local arr = {}
-   for k, v in pairs(t) do
-      table.insert(arr, {key = k, value = v})
+   local _keys = {}
+   for k in pairs(t) do table.insert(_keys, k) end
+   table.sort(_keys)
+
+   for _, k in ipairs(_keys) do
+      table.insert(arr, {key = k, value = t[k]})
    end
    return arr
 end
