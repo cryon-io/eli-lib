@@ -26,7 +26,7 @@ local function _to_array(t)
    return arr
 end
 
-local function is_array(t)
+local function _is_array(t)
    if type(t) ~= "table" then
       return false
    end
@@ -48,7 +48,7 @@ local function merge_tables(t1, t2, overwrite)
       return t1
    end
    local _result = {}
-   if is_array(t1) and is_array(t2) then
+   if _is_array(t1) and _is_array(t2) then
       for _, v in ipairs(t1) do
          -- merge index based arrays
          if type(v.id) == "string" then
@@ -98,7 +98,7 @@ local function filter_table(t, _filter)
    if type(_filter) ~= "function" then
       return t
    end
-   local isArray = is_array(t)
+   local isArray = _is_array(t)
 
    local res = {}
    for k, v in pairs(t) do
@@ -116,6 +116,9 @@ end
 local function generate_safe_functions(functions)
    if type(functions) ~= "table" then
       return functions
+   end
+   if _is_array(functions) then 
+      return functions -- safe function can be generated only on dictionary
    end
    local res = {}
 
@@ -199,52 +202,17 @@ local function _random_string(length, charset)
    return _random_string(length - 1) .. charset[math.random(1, #charset)]
 end
 
---If the semver string a is greater than b, return 1. If the semver string b is greater than a,
--- return -1. If a equals b, return 0;
-local function _compare_version(v1, v2)
-   if type(v1) == "string" and type(v2) == "string" then
-      local _v1parts = {}
-      for p in string.gmatch(v1, "[^%.]+") do
-         if pcall(tonumber, p) then
-            table.insert(_v1parts, p)
-         end
-      end
-
-      local _v2parts = {}
-      for p in string.gmatch(v2, "[^%.]+") do
-         if pcall(tonumber, p) then
-            table.insert(_v2parts, p)
-         end
-      end
-      for i, v in ipairs(_v1parts) do
-         if _v2parts[i] == nil or v > _v2parts[i] then
-            return 1
-         elseif v < _v2parts[i] then
-            return -1
-         end
-      end
-   elseif type(v1) == "number" and type(v2) == "number" then
-      if v1 > v2 then
-         return 1
-      elseif v1 < v2 then
-         return -1
-      end
-   end
-   return 0
-end
-
 return {
    keys = keys,
    values = values,
    to_array = _to_array,
    generate_safe_functions = generate_safe_functions,
-   is_array = is_array,
+   is_array = _is_array,
    escape_magic_characters = _escape_magic_characters,
    filter_table = filter_table,
    merge_tables = merge_tables,
    print_table = print_table,
    global_log_factory = _global_log_factory,
    remove_preloaded_lib = _remove_preloaded_lib,
-   random_string = _random_string,
-   compare_version = _compare_version
+   random_string = _random_string
 }
