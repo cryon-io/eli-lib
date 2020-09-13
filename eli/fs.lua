@@ -32,7 +32,7 @@ local function write_file(dst, content)
 end
 
 local function copy_file(src, dst)
-   assert(src ~= dst)
+   assert(src ~= dst, "Identical source and destiontion path!")
    local srcf = assert(io.open(src, "r"), "No such a file or directory - " .. src)
    local dstf = assert(io.open(dst, "w"), "Failed to open file for write - " .. dst)
 
